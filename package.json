@@ -1,0 +1,113 @@
+{
+  "name": "badger-den",
+  "version": "1.0.0",
+  "homepage": "https://github.com/trioderegion/badger-den",
+  "description": "Configurable rollup template for bundling FVTT modules.",
+  "license": "",
+  "private": true,
+  "type": "module",
+  "config": {
+    "id": "my-module",
+    "version": "0.1.0",
+    "title": "My FVTT Module",
+    "description": "Template module from the badger den.",
+    "projectUrl": "https://www.github.com/",
+    "entryPoints": {
+      "index": "src/index.mjs",
+      "style": "src/scss/style.scss"
+    },
+    "dependencies": {
+      "core": [
+        "10",
+        "10.291",
+        null
+      ],
+      "systems": {
+        "dnd5e": [
+          "1",
+          null,
+          "3"
+        ]
+      },
+      "modules": {
+        "warpgate": [
+          "1.16",
+          null,
+          "2"
+        ]
+      }
+    },
+    "directories": {
+      "lib": "src/lib",
+      "scss": "src/scss",
+      "static": "src/static",
+      "lang": "src/static/lang"
+    },
+    "authors": [
+      {
+        "name": "Me Myself and I",
+        "url": ""
+      }
+    ]
+  },
+  "scripts": {
+    "cook": "cross-env TARGET=cook rollup --config",
+    "test": "cross-env TARGET=test rollup --config",
+    "dev": "cross-env TARGET=dev rollup --config",
+    "test:watch": "cross-env TARGET=test rollup --config --watch",
+    "dev:watch": "cross-env TARGET=dev rollup --config --watch"
+  },
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-replace": "^5.0.2",
+    "@rollup/plugin-terser": "^0.4.3",
+    "@shon/tiny": "^2.3.0",
+    "autoprefixer": "^10.4.14",
+    "cross-env": "^7.0.3",
+    "dotenv-safe": "^8.2.0",
+    "locale-codes": "^1.3.1",
+    "postcss": "^8.4.23",
+    "postcss-preset-env": "^8.4.1",
+    "postcss-scss": "^4.0.6",
+    "rollup": "^3.23.0",
+    "rollup-plugin-copy-watch": "^0.0.1",
+    "rollup-plugin-delete": "^2.0.0",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-scss": "^4.0.0",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-string": "^3.0.0",
+    "sass": "^1.62.1"
+  },
+  "keywords": [
+    "foundry vtt",
+    "fvtt",
+    "module",
+    "rollup"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trioderegion/badger-den"
+  },
+  "bugs": {
+    "url": "https://github.com/trioderegion/badger-den/issues"
+  },
+  "overrides": {
+    "@rollup/pluginutils": "^5.0.2",
+    "globby": "^11.0.0",
+    "micromatch": "^4.0.0"
+  },
+  "author": {
+    "name": "BadgerWerks",
+    "url": "https://www.ko-fi.com/badgerwerks"
+  },
+  "contributors": [
+    {
+      "name": "trioderegion",
+      "url": "https://www.github.com/trioderegion"
+    }
+  ]
+}
