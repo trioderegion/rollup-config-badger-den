@@ -1,13 +1,52 @@
-import fs from 'fs';
 import path from 'path';
 import locale from 'locale-codes';
-/** @type {import('package.json').config} PackageConfig */
+import {globSync as glob} from 'glob';
 
-const entryPoints = (names, extension) => Object.entries(names).reduce( (acc, [output, input]) => {
-        const ext = path.extname(input);
-        ext.includes(extension) ? acc.push(output + '.' + extension) : null;
-        return acc;
-      }, [])
+const makeEntryPointFields = (entryPoints) => {
+  /* ES Modules */
+  let esmodules = entryPoints.main ?? [];
+  if(typeof esmodules == 'string') esmodules = [esmodules];
+  esmodules = esmodules.flatMap( entry => glob(entry)
+    .filter( fp => !!path.extname(fp) )
+    .map( fp => path.relative('src/', fp)));
+
+  /* Externals */
+  let externals = entryPoints.external ?? [];
+  if(typeof externals == 'string') externals = [externals];
+  externals = externals.flatMap( entry => glob(entry)
+    .filter( fp => !!path.extname(fp) )
+    .map( fp => path.relative('src/', fp)));
+
+  /* Compiled Styles */
+  let styles = entryPoints.style ?? [];
+  if(typeof styles == 'string') styles = [styles];
+  styles = styles.flatMap( entry => glob(entry)
+    .filter( fp => !!path.extname(fp) && path.parse(fp).base[0] != '_' )
+    .map( fp => path.format({
+      ...path.parse(path.relative('src/', fp)), 
+      base: '',
+      ext: '.css'
+    })));
+  
+  /* Discovered Languages */
+  let languages = entryPoints.lang ?? [];
+  if(typeof languages == 'string') languages = [languages];
+  languages = languages.flatMap( entry => {
+    const files = glob(entry).filter( fp => !!path.extname(fp) );
+    return files.map( filename => {
+      if(path.extname(filename) == `.json`) {
+        const lang = path.basename(filename, '.json');
+        const name = locale.getByTag(lang).name;
+        return {lang, name, path: path.relative('src/', filename)};
+      }
+      return null;
+    }).filter( lang => !!lang );
+  })
+  console.log('Entry Points:', {esmodules, externals});
+  console.log('Root Styles:', styles);
+  console.log('Languages', languages);
+  return {esmodules, styles, languages, externals};
+}
 
 const compat = ([min, curr, max]) => {
   const data = {};
@@ -18,24 +57,6 @@ const compat = ([min, curr, max]) => {
 }
 
 const makeDep = (deps) => Object.entries(deps).map( ([id, versions]) => ({id, compatibility: compat(versions)}) );
-
-const makeLangs = (inputDir, outputDir) => {
-  const langEntries = []; 
-  //console.log('make langs input:', inputDir, outputDir);
-  if(inputDir == undefined) return langEntries;
-  outputDir ??= path.basename(inputDir);
-
-  const jsons = fs.readdirSync(inputDir);
-  console.log('found langs', jsons);
-  for ( const filename of jsons ) {
-    if(path.extname(filename) == `.json`) {
-      const lang = path.basename(filename, '.json');
-      const name = locale.getByTag(lang).name;
-      langEntries.push({lang, name, path: path.join(outputDir, filename)})
-    }
-  }
-  return langEntries;
-}
 
 /**
  * Generate manifest data
@@ -50,13 +71,10 @@ export default (config) => {
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
-    //console.log(config);
     return {
       "title": config.title,
-      "languages": makeLangs(config.directories.lang, 'static/lang'),
       "id": config.id,
-      "esmodules": entryPoints(config.entryPoints, 'mjs'),
-      "styles": entryPoints(config.entryPoints, 'css'),
+      ...makeEntryPointFields(config.entryPoints),
       "compatibility": compat(config.dependencies.core),
       "relationships": {
         "systems": makeDep(config.dependencies.systems),

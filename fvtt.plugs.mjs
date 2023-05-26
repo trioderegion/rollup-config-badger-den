@@ -1,7 +1,11 @@
 import fs from 'fs';
-import manifest from './fvtt.config.mjs';
+import buildManifest from './fvtt.config.mjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {globSync as glob} from 'glob';
+import merge from 'rollup-merge-config';
+
+import pscssPlug from './scss.config.mjs';
 
 // Helper functions for module building
 const flatten = (obj, roots=[], sep='.') => Object.keys(obj).reduce((memo, prop) => Object.assign({}, memo, Object.prototype.toString.call(obj[prop]) === '[object Object]' ? flatten(obj[prop], roots.concat([prop]), sep) : {[roots.concat([prop]).join(sep)]: obj[prop]}), {})
@@ -15,9 +19,12 @@ export function packageWatcher(jsonPath = 'package.json', name = 'package') {
   let pkgName = name ?? jsonPath.split('.').at(-2);
   if (!name) pkgName = pkgName.split('/').at(-1);
   const pkgPath = path.resolve(__dirname, jsonPath);
-  let jsonFull = JSON.parse(fs.readFileSync(pkgPath));
-  let jsonFlat = flatten(jsonFull);
 
+  let jsonFull = {}//JSON.parse(fs.readFileSync(pkgPath));
+  let jsonFlat = {}//flatten(jsonFull);
+  let builtManifest = {}//buildManifest(jsonFull.config);
+  let replacements = {}//pkgReplacements();
+  
   // Replacement paths
   const pkgReplacements = () => {
     return Object.keys(jsonFlat).reduce( (acc, path) => {
@@ -26,7 +33,6 @@ export function packageWatcher(jsonPath = 'package.json', name = 'package') {
     },{})
   };
 
-  let replacements = pkgReplacements();
 
   const doReplace = (targetString) => {
     //console.log('replacements', replacements);
@@ -39,11 +45,8 @@ export function packageWatcher(jsonPath = 'package.json', name = 'package') {
 
   const init = () => {
     jsonFull = JSON.parse(fs.readFileSync(pkgPath));
+    builtManifest = buildManifest(jsonFull.config);
     jsonFlat = flatten(jsonFull);
-    replacements = pkgReplacements();
-    const stringflat = JSON.stringify(jsonFlat);
-    const replacedstring = doReplace(stringflat);
-    jsonFlat = JSON.parse(replacedstring);
     replacements = pkgReplacements();
   }
   /* custom plugin allowing a watcher
@@ -51,25 +54,43 @@ export function packageWatcher(jsonPath = 'package.json', name = 'package') {
    * need to touch the module.json
    */
   const packagewatcher = () => ({
-    get raw() { return jsonFull },
-    get json() { return jsonFlat },
-    doReplace,  
-    init,
     name: `${pkgName}-watcher`,
+    options(opts) {
+      init();
+      const fvttOpts = {
+        input: [...builtManifest.esmodules, ...builtManifest.externals].
+          reduce( (acc, output) => {acc[output] = `src${path.sep}${output}`; return acc;},{}),
+        context: 'globalThis',
+        watch: {
+          include: ['src/**'],
+          exclude: ['**/*.sw*'],
+          clearScreen: true,
+        },
+        external: [
+          '$lib'
+        ],
+        plugins: [
+          pscssPlug()
+        ]
+      }
+      return merge(opts, fvttOpts);
+    },
     buildStart() {
-      /* latch the current package */
-      init()
-
       /* emit a configured module.json */
       this.emitFile({
         type: 'prebuilt-chunk',
         fileName: 'module.json',
-        code: JSON.stringify(manifest(jsonFull.config), null, 2), 
+        code: JSON.stringify(builtManifest, null, 2), 
       })
-
       /* add styles folder for explicit watching */
-      const styles = jsonFull.config.directories?.scss;
-      if (!!styles) this.addWatchFile(path.resolve(__dirname, styles))
+      /* Compiled Styles */
+      let styles = jsonFull.config.entryPoints?.style ?? [];
+      if(typeof styles == 'string') styles = [styles];
+
+      styles = styles.flatMap( entry => glob(entry)
+        .filter( fp => !!path.extname(fp) ));
+      console.log('Watching Styles:', styles);
+      styles.forEach(fp => this.addWatchFile(path.resolve(__dirname, fp)));
     },
     transform(code) {
       /* add the package.json to the watch list
@@ -82,7 +103,5 @@ export function packageWatcher(jsonPath = 'package.json', name = 'package') {
     },
   });
 
-  const pw = packagewatcher()
-  pw.init(); //TODO using the NPM environment var gives us most of what we need upfront
-  return pw;
+  return packagewatcher();
 }

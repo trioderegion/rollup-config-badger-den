@@ -1,4 +1,13 @@
-/* Hello World */
+@use 'variables';
+@use 'reset';
+
 :root {
-  --test-var: red;
+  --test-var: blue;
+}
+div {
+  border:none;
+}
+p {
+  @include reset.list();
+  margin: variables.$test;
 }

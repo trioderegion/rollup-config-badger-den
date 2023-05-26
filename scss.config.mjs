@@ -1,19 +1,30 @@
-import scss from 'rollup-plugin-scss';
-import postcss from 'postcss'
-import autoprefixer     from 'autoprefixer';             // Adds vendor specific extensions to CSS
-import postcssPresetEnv from 'postcss-preset-env';       // Popular postcss plugin for next gen CSS usage.
-import {packageWatcher as pkg} from './fvtt.plugs.mjs'
+import pscss from 'rollup-plugin-scss';
+import autoprefixer     from 'autoprefixer';
+import postcssPresetEnv from 'postcss-preset-env';
 
-//TODO capture as list
-const entry = pkg().raw.config.entryPoints.style;
-const output = 'style.css';
-
-export default ({createSourceMap, watchList = [], postcssPlugs = [], ...rest}) => 
-  scss({
-    processor: () => postcss([autoprefixer(), postcssPresetEnv(), ...postcssPlugs]),
-    outputStyle: 'compressed',
-    fileName: output,
-    sourceMap: createSourceMap,
-    watch: watchList,
+export default ({
+  fileName = 'style.css',
+  inject = false,           // Don't inject CSS into <HEAD>
+  extract = true,
+  extensions = ['.scss'],   // File extensions to process
+  modules = true,
+  plugins = [               // Postcss plugins to use
+    autoprefixer,
+    postcssPresetEnv,
+  ],            
+  use = ['sass'],// Use sass / dart-sass
+  sourceMap = true,
+  ...rest
+} = {}) => (
+  pscss({
+    fileName,
+    inject,
+    extract,
+    extensions,
+    modules,
+    plugins,
+    use,
+    sourceMap,
     ...rest
   })
+)

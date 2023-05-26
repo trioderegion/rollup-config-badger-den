@@ -13,13 +13,15 @@
     "description": "Template module from the badger den.",
     "projectUrl": "https://www.github.com/",
     "entryPoints": {
-      "index": "src/index.mjs",
-      "style": "src/scss/style.scss"
+      "main": "src/index.mjs",
+      "style": "src/scss/*",
+      "external": "src/lib/**",
+      "lang": "src/static/lang/**"
     },
     "dependencies": {
       "core": [
         "10",
-        "10.291",
+        "10.290",
         null
       ],
       "systems": {
@@ -31,18 +33,19 @@
       },
       "modules": {
         "warpgate": [
-          "1.16",
+          "1.15",
           null,
-          "2"
+          "3"
         ]
       }
     },
-    "directories": {
-      "lib": "src/lib",
-      "scss": "src/scss",
-      "static": "src/static",
-      "lang": "src/static/lang"
+    "alias": {
+      "$lib": "./lib",
+      "$static": "./static"
     },
+    "static": [
+      "src/static"
+    ],
     "authors": [
       {
         "name": "Me Myself and I",
@@ -55,7 +58,8 @@
     "test": "cross-env TARGET=test rollup --config",
     "dev": "cross-env TARGET=dev rollup --config",
     "test:watch": "cross-env TARGET=test rollup --config --watch",
-    "dev:watch": "cross-env TARGET=dev rollup --config --watch"
+    "dev:watch": "cross-env TARGET=dev rollup --config --watch",
+    "sass": "sass"
   },
   "devDependencies": {
     "@rollup/plugin-alias": "^5.0.0",
@@ -68,11 +72,13 @@
     "autoprefixer": "^10.4.14",
     "cross-env": "^7.0.3",
     "dotenv-safe": "^8.2.0",
+    "glob": "^10.2.6",
     "locale-codes": "^1.3.1",
     "postcss": "^8.4.23",
     "postcss-preset-env": "^8.4.1",
     "postcss-scss": "^4.0.6",
     "rollup": "^3.23.0",
+    "rollup-merge-config": "^0.0.12",
     "rollup-plugin-copy-watch": "^0.0.1",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-node-globals": "^1.4.0",
