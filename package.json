@@ -40,7 +40,6 @@
       }
     },
     "alias": {
-      "$lib": "./lib",
       "$static": "./static"
     },
     "static": [
