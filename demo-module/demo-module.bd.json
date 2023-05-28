@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "title": "Badger Den Demo Module",
+  "description": "Demonstration module built from the Badger Den",
+  "projectUrl": "https://www.npmjs.com/",
+  "entryPoints": {
+    "main": "index.mjs",
+    "style": "scss/*",
+    "external": "lib/index.js",
+    "lang": "static/lang/**"
+  },
+  "build": {
+    "dev":{
+      "dest":"./build",
+      "compress":false,
+      "sourcemaps": true,
+      "clean": false
+    },
+    "release":{
+      "dest":"./build",
+      "compress":true,
+      "sourcemaps": true,
+      "clean": true
+    }
+  },
+  "dependencies": {
+    "core": [
+      "10",
+      "11.299",
+      "12"
+    ]
+  },
+  "static": [
+    "static"
+  ],
+  "authors": [
+    {
+      "name": "trioderegion",
+      "url": "https://www.github.com/trioderegion"
+    }
+  ]
+}

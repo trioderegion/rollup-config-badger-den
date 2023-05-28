@@ -1,3 +1,3 @@
 import tiny from "@shon/tiny";
 
-export {tiny};
+export default tiny;
