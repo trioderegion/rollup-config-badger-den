@@ -1,6 +1,6 @@
 {
   "name": "@badgerwerks/badger-den",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "homepage": "https://github.com/trioderegion/badger-den",
   "description": "Configurable rollup plugin/template for bundling FVTT modules.",
   "license": "MIT",
