@@ -6,11 +6,16 @@
   "license": "MIT",
   "private": false,
   "type": "module",
-  "main": "./src/den.config.mjs",
+  "main": "./dist/index.js",
+  "files": "./demo-module",
   "scripts": {
     "build-plugin": "rollup --config"
   },
-  "dependencies":{
+  "np": {
+    "yarn": false,
+    "contents": "dist"
+  },
+  "dependencies": {
     "cross-env": "^7.0.3",
     "rollup": "^3.23.0",
     "postcss": "^8.4.23",
@@ -50,7 +55,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/trioderegion/badger-den"
+    "url": "https://github.com/trioderegion/badger-den.git"
   },
   "bugs": {
     "url": "https://github.com/trioderegion/badger-den/issues"
@@ -60,18 +65,12 @@
     "globby": "^11.0.0",
     "micromatch": "^4.0.0"
   },
-  "author": {
-    "name": "BadgerWerks",
-    "url": "https://www.ko-fi.com/badgerwerks"
-  },
+  "author": "BadgerWerks (https://www.ko-fi.com/badgerwerks)",
   "contributors": [
-    {
-      "name": "trioderegion",
-      "url": "https://www.github.com/trioderegion"
-    }
+    "trioderegion (https://www.github.com/trioderegion)"
   ],
   "funding": {
-    "type" : "ko-fi",
-    "url" : "https://ko-fi.com/badgerwerks"
+    "type": "ko-fi",
+    "url": "https://ko-fi.com/badgerwerks"
   }
 }
