@@ -14,7 +14,7 @@ import commonjs from "@rollup/plugin-commonjs";
 /******************
  * Pre-configured badger den plugin
  ******************/
-import badgerDen from "./den.config.mjs";
+import badgerDen from "badger-den";
 
 export default () => {
   /* Some contexts do not forward these

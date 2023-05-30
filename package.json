@@ -1,17 +1,16 @@
 {
-  "name": "@badgerwerks/badger-den",
+  "name": "badger-den",
   "version": "2.0.0",
   "homepage": "https://github.com/trioderegion/badger-den",
   "description": "Configurable rollup plugin/template for bundling FVTT modules.",
   "license": "MIT",
-  "private": false,
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/plugin/index.js",
   "files": "./demo-module",
   "scripts": {
     "build-plugin": "rollup --config",
     "release": "np",
-    "test": ""
+    "test": "cross-env TARGET=src/demo-module/src/demo-module:dev rollup --config src/rollup.config.js"
   },
   "dependencies": {
     "cross-env": "^7.0.3",
@@ -21,8 +20,8 @@
     "postcss": "^8.4.24",
     "postcss-preset-env": "^8.4.1",
     "rollup": "^3.23.0",
-    "sass": "^1.62.1",
-    "rollup-plugin-delete": "^2.0.0"
+    "rollup-plugin-delete": "^2.0.0",
+    "sass": "^1.62.1"
   },
   "peerDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
@@ -34,14 +33,15 @@
     "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-copy-watch": "^0.0.1",
     "rollup-plugin-multi-input": "^1.4.1",
-    "rollup-plugin-node-globals": "^1.4.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-scss": "^4.0.0",
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-string": "^3.0.0"
   },
   "devDependencies": {
-    "@yelo/rollup-node-external": "^1.0.1"
+    "@shon/tiny": "^2.3.0",
+    "@yelo/rollup-node-external": "^1.0.1",
+    "rollup-plugin-node-externals": "^6.0.1"
   },
   "keywords": [
     "foundry vtt",

@@ -1,4 +1,4 @@
-import tiny from 'lib/tiny.mjs'
+import tiny from './tiny.mjs'
 
 const packages = {
   tiny,

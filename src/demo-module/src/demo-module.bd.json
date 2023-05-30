@@ -6,18 +6,18 @@
   "entryPoints": {
     "main": "index.mjs",
     "style": "scss/*",
-    "external": "lib/index.js",
+    "external": "lib/tiny.mjs",
     "lang": "static/lang/**"
   },
-  "build": {
+  "profile": {
     "dev":{
-      "dest":"./build",
+      "dest":"../test-build",
       "compress":false,
       "sourcemaps": true,
       "clean": false
     },
     "release":{
-      "dest":"./build",
+      "dest":"../test-build",
       "compress":true,
       "sourcemaps": true,
       "clean": true
