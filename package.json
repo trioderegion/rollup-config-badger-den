@@ -8,9 +8,6 @@
   "exports": {
     ".": "./dist/index.mjs"
   },
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "build": "rollup --config",
     "release": "np",
