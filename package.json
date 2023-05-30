@@ -1,7 +1,7 @@
 {
   "name": "rollup-config-badger-den",
   "version": "0.0.0",
-  "homepage": "https://github.com/trioderegion/badger-den",
+  "homepage": "https://github.com/trioderegion/rollup-config-badger-den",
   "description": "Configurable rollup plugin/template for bundling FVTT modules.",
   "license": "MIT",
   "type": "module",
@@ -52,10 +52,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/trioderegion/badger-den.git"
+    "url": "https://github.com/trioderegion/rollup-config-badger-den.git"
   },
   "bugs": {
-    "url": "https://github.com/trioderegion/badger-den/issues"
+    "url": "https://github.com/trioderegion/rollup-config-badger-den/issues"
   },
   "overrides": {
     "@rollup/pluginutils": "^5.0.2",
