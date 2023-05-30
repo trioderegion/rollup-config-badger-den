@@ -6,8 +6,9 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./index.mjs"
+    ".": "./dist/index.mjs"
   },
+  "files": ["dist/**"],
   "scripts": {
     "build": "rollup --config",
     "release": "np",
