@@ -11,13 +11,13 @@
   },
   "profile": {
     "dev":{
-      "dest":"../test-build",
+      "dest":"../",
       "compress":false,
       "sourcemaps": true,
       "clean": false
     },
     "release":{
-      "dest":"../test-build",
+      "dest":"../",
       "compress":true,
       "sourcemaps": true,
       "clean": true

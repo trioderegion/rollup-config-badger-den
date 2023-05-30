@@ -35,6 +35,7 @@ class BDConfig {
       : path.join(process.env.INIT_CWD, profileURI);
 
     const { profile, config } = this.load(profileURI);
+    console.log(this);
     this.config = config;
     this.profile = profile;
     this.namespace = namespace;
@@ -173,7 +174,6 @@ class BDConfig {
   }
 
   load(profileURI) {
-    console.log(profileURI);
     const configRel = path.dirname(profileURI);
     const nameProfile = path.basename(profileURI);
     const [configName = null, profileName = null] = nameProfile.split(":");
@@ -200,6 +200,7 @@ class BDConfig {
     const profile = config.profile[profileName];
     const moduleRoot = path.dirname(configPath);
     profile.src = moduleRoot;
+    profile.name = profileName;
 
     if (!profile.dest) {
       throw new Error(

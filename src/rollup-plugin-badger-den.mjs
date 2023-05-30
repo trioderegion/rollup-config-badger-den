@@ -1,4 +1,3 @@
-//import commonjs from "@rollup/plugin-commonjs";
 import path from "path";
 import { globSync as glob } from "glob";
 import merge from "rollup-merge-config";
@@ -6,13 +5,32 @@ import del from "rollup-plugin-delete"; //cleaning output directory
 import copy from "rollup-plugin-copy-watch"; //watching non-directly referenced files
 import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_modules
 
-export default ({ config, scssPlug, compressPlug } = {}) => {
+import terserPlugin from "./terser.config.mjs";
+import postScss from "./scss.config.mjs";
+
+export default ({ config, plugins = { scss: true, compress: true } }) =>
+  getPlugin({
+    config,
+    scssPlug:
+      plugins.scss === false
+        ? null
+        : plugins.scss === true || plugins.scss == undefined
+        ? postScss
+        : scss,
+    compressPlug:
+      plugins.compress === false
+        ? null
+        : plugins.compress === true || plugins.compress == undefined
+        ? terserPlugin
+        : scss,
+  });
+
+function getPlugin({ config, scssPlug, compressPlug } = {}) {
   /* Some contexts do not forward these system
    * symbols, define them ourself
    */
   //const _filename = fileURLToPath(import.meta.url);
   const _wdir = process.env.INIT_CWD //path.dirname(_filename);
-  console.debug("Plugin working dir (_wdir):", _wdir);
 
   config.build();
 

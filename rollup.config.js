@@ -1,8 +1,4 @@
 /******************
- * Node imports
- ******************/
-
-/******************
  * Rollup plugin imports
  ******************/
 import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_modules
@@ -20,27 +16,11 @@ export default [
       format: "es",
     },
     plugins: [
-      node_externals({include: 'badger-den'}),
+      node_externals(),
       resolve({ preferBuiltins: true }),
       copy({
         targets: [{ src: "src/demo-module/**", dest: "./dist" }],
         flatten: false,
       }),
     ],
-  }/*,{
-    input: {
-      'runner': 'src/rollup.config.js',
-    },
-    output: {
-      dir: "./dist",
-      entryFileNames: '[name]/index.js',
-      format: "cjs",
-    },
-    plugins: [
-      node_externals({include: 'badger-den'}),
-      resolve({ preferBuiltins: true }),
-      
-    ],
-  },*/
-
-];
+  }];

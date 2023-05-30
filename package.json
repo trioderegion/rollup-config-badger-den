@@ -1,42 +1,40 @@
 {
-  "name": "badger-den",
-  "version": "2.0.0",
+  "name": "rollup-config-badger-den",
+  "version": "1.0.0",
   "homepage": "https://github.com/trioderegion/badger-den",
   "description": "Configurable rollup plugin/template for bundling FVTT modules.",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/plugin/index.js",
-  "files": "./demo-module",
+  "exports": {
+    ".": "./dist/index.mjs"
+  },
+  "files": "./dist/demo-module",
   "scripts": {
-    "build-plugin": "rollup --config",
+    "build": "rollup --config",
     "release": "np",
-    "test": "cross-env TARGET=src/demo-module/src/demo-module:dev rollup --config src/rollup.config.js"
+    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:dev",
+    "test": "rollup --config dist/index.mjs --config-den dist/demo-module/src/demo-module:dev"
   },
   "dependencies": {
-    "cross-env": "^7.0.3",
-    "dotenv-safe": "^8.2.0",
     "glob": "^10.2.6",
     "locale-codes": "^1.3.1",
     "postcss": "^8.4.24",
     "postcss-preset-env": "^8.4.1",
-    "rollup": "^3.23.0",
     "rollup-plugin-delete": "^2.0.0",
-    "sass": "^1.62.1"
-  },
-  "peerDependencies": {
+    "sass": "^1.62.1",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-terser": "^0.4.3",
+    "@rollup/plugin-terser": "^0.4.3",,
+    "rollup-plugin-copy-watch": "^0.0.1",
     "autoprefixer": "^10.4.14",
     "postcss-scss": "^4.0.6",
     "rollup-merge-config": "^0.0.12",
     "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-copy-watch": "^0.0.1",
-    "rollup-plugin-multi-input": "^1.4.1",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-scss": "^4.0.0",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "rollup-plugin-string": "^3.0.0"
+    "rollup-plugin-sourcemaps": "^0.6.3"
+  },
+  "peerDependencies": {
   },
   "devDependencies": {
     "@shon/tiny": "^2.3.0",
