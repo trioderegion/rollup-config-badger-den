@@ -8,7 +8,7 @@
   "exports": {
     ".": "./dist/index.mjs"
   },
-  "files": "./dist/demo-module",
+  "files": ["dist/**"],
   "scripts": {
     "build": "rollup --config",
     "release": "np",
@@ -24,7 +24,7 @@
     "sass": "^1.62.1",
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.2",
-    "@rollup/plugin-terser": "^0.4.3",,
+    "@rollup/plugin-terser": "^0.4.3",
     "rollup-plugin-copy-watch": "^0.0.1",
     "autoprefixer": "^10.4.14",
     "postcss-scss": "^4.0.6",
