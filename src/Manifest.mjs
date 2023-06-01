@@ -35,7 +35,6 @@ class BDConfig {
       : path.join(process.env.INIT_CWD, profileURI);
 
     const { profile, config } = this.load(profileURI);
-    console.log(this);
     this.config = config;
     this.profile = profile;
     this.namespace = namespace;
@@ -186,17 +185,31 @@ class BDConfig {
 
     /* load package config */
     const configPath = path.join(configRel, configName + ".bd.json");
-    const config = JSON.parse(fs.readFileSync(configPath));
 
-    config.id ??= configName;
-
-    if (!config.id) {
+    if (!fs.existsSync(configPath)) {
       throw new Error(
-        `Could not read field "id" from configuration file: ${configPath}`
+        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${configPath}" from "${
+          import.meta.url
+        }".`
       );
     }
 
+    const config = JSON.parse(fs.readFileSync(configPath));
+
+    if (!("id" in config)) {
+      console.warn(
+        `...Den config missing "id" field -- using config file name "${configName}."`
+      );
+      config.id = configName;
+    }
+
     /* latch desired profile */
+    if (!(profileName in config.profile ?? {})) {
+      throw new Error(
+        `Could not locate den config field "profile.${profileName}" in "${configPath}"`
+      );
+    }
+
     const profile = config.profile[profileName];
     const moduleRoot = path.dirname(configPath);
     profile.src = moduleRoot;
@@ -226,6 +239,8 @@ class BDConfig {
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
+    config.static ??= [];
+    config.authors ??= [];
 
     return { profile, config };
   }

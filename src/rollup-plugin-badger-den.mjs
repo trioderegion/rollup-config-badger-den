@@ -54,7 +54,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
    * need to touch the module.json
    */
   const rollupPlug = () => ({
-    name: "badger-den",
+    name: "rollup-plugin-badger-den",
     api,
     options(opts) {
       const input = [

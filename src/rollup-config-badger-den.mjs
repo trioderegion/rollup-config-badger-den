@@ -6,6 +6,7 @@ const bdRollupConfig = ({denConfig = null, denPlug = null} = {}) => {
 
   if (typeof denConfig == 'string') {
     /* Assume this is a raw config path and load it */    
+    console.log
     denConfig = new loader(denConfig);
   }
   denPlug ??= bdPlug;
