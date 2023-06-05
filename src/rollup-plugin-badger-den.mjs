@@ -29,7 +29,6 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
   /* Some contexts do not forward these system
    * symbols, define them ourself
    */
-  //const _filename = fileURLToPath(import.meta.url);
   const _wdir = process.env.INIT_CWD //path.dirname(_filename);
 
   config.build();
@@ -126,15 +125,28 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     outputOptions(opts) {
       const output = {
         entryFileNames: "[name]",
-        dir: api.meta.profile.dest,
+        //dir: api.meta.profile.dest,
         format: "es",
         globals: {
           jquery: "$",
         },
         sourcemap: api.meta.profile.sourcemaps,
         sourcemapPathTransform: (
-          sourcePath //TODO need to revisit
-        ) => sourcePath.replace(_wdir, "."),
+          sourcePath, mapFilePath  //TODO need to revisit
+        ) => {
+          //const outRel = path.resolve(sourcePath, api.meta.profile.dest);
+          //console.log('outRel', outRel);
+
+          const sourceRel = path.relative(api.meta.profile.src, sourcePath);
+          //console.log('sourceRel', sourceRel);
+
+          const outAbs = path.join(path.dirname(mapFilePath), sourceRel);
+          //console.log('outAbs', outAbs);
+
+          const sourceMapRel = path.relative(mapFilePath, outAbs)
+          console.log('sourceMapRel', sourceMapRel);
+          return sourceMapRel 
+        },
       };
       const merged = merge(opts, output);
       //console.log(opts, output, merged);

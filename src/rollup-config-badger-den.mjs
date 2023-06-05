@@ -14,19 +14,9 @@ const bdRollupConfig = ({denConfig = null, denPlug = null} = {}) => {
   console.log("BadgerDen Workflow    : ", `${denConfig.config.id}:${denConfig.profile.name}`);
   console.log("BadgerDen Source      : ", denConfig.profile.src);
   console.log("BadgerDen Destination : ", denConfig.profile.dest);
-  
   return [{
     output: {
-      entryFileNames: "[name]",
       dir: denConfig.profile.dest,
-      format: "es",
-      globals: {
-        jquery: "$",
-      },
-      sourcemap: denConfig.profile.sourcemaps,
-      sourcemapPathTransform: (
-        sourcePath //TODO need to revisit
-      ) => sourcePath.replace(import.meta.url, "."),
     },
     plugins: [
       denPlug({
