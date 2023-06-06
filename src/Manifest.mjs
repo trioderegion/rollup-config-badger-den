@@ -3,6 +3,8 @@ import { globSync as glob } from "glob";
 import path from "path";
 import fs from "fs";
 
+const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
+
 // Flatten an object to dot notation
 const flatten = (obj, roots = [], sep = ".") =>
   Object.keys(obj).reduce(
@@ -65,14 +67,14 @@ class BDConfig {
     let esmodules = entryPoints.main ?? [];
     if (typeof esmodules == "string") esmodules = [esmodules];
     esmodules = esmodules.flatMap((entry) =>
-      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp))
+      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp)).map(posixPath)
     );
 
     /* Externals */
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp))
+      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp)).map(posixPath)
     );
 
     /* Compiled Styles */
@@ -82,7 +84,7 @@ class BDConfig {
       glob(entry, { cwd: profile.src })
         .filter((fp) => !!path.extname(fp) && path.parse(fp).base[0] != "_")
         .map((fp) =>
-          path.relative(
+          posixPath(path.relative(
             profile.src,
             path.join(
               profile.src,
@@ -93,7 +95,7 @@ class BDConfig {
               })
             )
           )
-        )
+        ))
     );
 
     /* Discovered Languages */
@@ -111,10 +113,10 @@ class BDConfig {
             return {
               lang,
               name,
-              path: path.relative(
+              path: posixPath(path.relative(
                 profile.src,
                 path.join(profile.src, filename)
-              ),
+              )),
             };
           }
           return null;

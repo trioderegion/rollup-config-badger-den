@@ -5,17 +5,17 @@
     "index.mjs"
   ],
   "styles": [
-    "static\\style.css"
+    "static/style.css"
   ],
   "languages": [
     {
       "lang": "en",
       "name": "English",
-      "path": "static\\lang\\en.json"
+      "path": "static/lang/en.json"
     }
   ],
   "externals": [
-    "lib\\tiny.mjs"
+    "lib/tiny.mjs"
   ],
   "compatibility": {
     "minimum": "10",
