@@ -134,17 +134,18 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         sourcemapPathTransform: (
           sourcePath, mapFilePath  //TODO need to revisit
         ) => {
-          //const outRel = path.resolve(sourcePath, api.meta.profile.dest);
-          //console.log('outRel', outRel);
+          console.log('sourcePath', sourcePath, 'mapFilePath', mapFilePath);
+          const stripModule = new RegExp(`(.*${api.meta.config.id}[\\/\\\\])`)
+          const sourceLocal = path.dirname(mapFilePath).replace(stripModule, '');
+          //console.log('sourceLocal', sourceLocal);
+          
+          const fakeAbsLocal = path.resolve(api.meta.profile.src,sourcePath)
+          const parsedLocal = path.parse(fakeAbsLocal)
+          const fileLocal = fakeAbsLocal.replace(parsedLocal.root, '').replace(stripModule, '');
+          //console.log('fileLocal',fileLocal);
 
-          const sourceRel = path.relative(api.meta.profile.src, sourcePath);
-          //console.log('sourceRel', sourceRel);
-
-          const outAbs = path.join(path.dirname(mapFilePath), sourceRel);
-          //console.log('outAbs', outAbs);
-
-          const sourceMapRel = path.relative(mapFilePath, outAbs)
-          console.log('sourceMapRel', sourceMapRel);
+          const sourceMapRel = path.relative(sourceLocal, fileLocal);
+          //console.log('sourceMapRel', sourceMapRel);
           return sourceMapRel 
         },
       };
