@@ -258,9 +258,9 @@ class BDConfig {
   }
 
   makeInclude(root, target) {
-    return path
-      .join(path.relative(root, this.profile.src), target)
-      .replace(/\\/g, "/");
+    return posixPath(path
+      .join(path.relative(root, this.profile.src), target));
+      
   }
 }
 

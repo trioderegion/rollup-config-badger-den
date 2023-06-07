@@ -8,6 +8,8 @@ import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_
 import terserPlugin from "./terser.config.mjs";
 import postScss from "./scss.config.mjs";
 
+const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
+
 export default ({ config, plugins = { scss: true, compress: true } }) =>
   getPlugin({
     config,
@@ -29,7 +31,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
   /* Some contexts do not forward these system
    * symbols, define them ourself
    */
-  const _wdir = process.env.INIT_CWD //path.dirname(_filename);
+  const _wdir = process.env.INIT_CWD; //path.dirname(_filename);
 
   config.build();
 
@@ -57,8 +59,8 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     api,
     options(opts) {
       const input = [
-        ...api.cache.manifest.esmodules, 
-        ...api.cache.manifest.externals, 
+        ...api.cache.manifest.esmodules,
+        ...api.cache.manifest.externals,
       ].reduce((acc, curr) => {
         acc[curr] = path.join(api.meta.profile.src, curr);
         return acc;
@@ -132,21 +134,32 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         },
         sourcemap: api.meta.profile.sourcemaps,
         sourcemapPathTransform: (
-          sourcePath, mapFilePath  //TODO need to revisit
+          sourcePath,
+          mapFilePath //TODO need to revisit
         ) => {
-          console.log('sourcePath', sourcePath, 'mapFilePath', mapFilePath);
-          const stripModule = new RegExp(`(.*${api.meta.config.id}[\\/\\\\])`)
-          const sourceLocal = path.dirname(mapFilePath).replace(stripModule, '');
+          //console.log('profile source', api.meta.profile.src);
+          //console.log('profile dest', api.meta.profile.dest);
+          sourcePath = posixPath(
+            path.resolve(path.join(path.dirname(mapFilePath), sourcePath))
+          );
+          mapFilePath = posixPath(mapFilePath);
+          //console.log('sourcePath', sourcePath, 'mapFilePath', mapFilePath);
+          const stripModule = new RegExp(`(.*${api.meta.config.id}\/)`);
+          const sourceLocal = posixPath(path.resolve(sourcePath)).replace(
+            stripModule,
+            ""
+          );
           //console.log('sourceLocal', sourceLocal);
-          
-          const fakeAbsLocal = path.resolve(api.meta.profile.src,sourcePath)
-          const parsedLocal = path.parse(fakeAbsLocal)
-          const fileLocal = fakeAbsLocal.replace(parsedLocal.root, '').replace(stripModule, '');
-          //console.log('fileLocal',fileLocal);
 
-          const sourceMapRel = path.relative(sourceLocal, fileLocal);
-          //console.log('sourceMapRel', sourceMapRel);
-          return sourceMapRel 
+          const mapLocal = mapFilePath.replace(stripModule, "");
+          //console.log('mapLocal', mapLocal);
+
+          const sourceMapRel = path.relative(
+            path.dirname(mapLocal),
+            sourceLocal
+          );
+          //console.log('sourceMapRel', sourceMapRel, '\n');
+          return sourceMapRel;
         },
       };
       const merged = merge(opts, output);
@@ -184,4 +197,4 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
   });
 
   return rollupPlug();
-};
+}
