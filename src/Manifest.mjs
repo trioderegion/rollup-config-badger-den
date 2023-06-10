@@ -165,6 +165,7 @@ class BDConfig {
       version: this.config.version,
       authors: this.config.authors,
       url: this.config.projectUrl,
+      socket: this.config.socket ?? false,
       manifest: "",
       download: "",
     };

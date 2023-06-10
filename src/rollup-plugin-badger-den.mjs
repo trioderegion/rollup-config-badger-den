@@ -43,6 +43,9 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       return config.cache;
     },
 
+    socketDetected: false,
+    manifestId: '',
+
     makeInclude: (projectLocalPath) =>
       config.makeInclude(_wdir, projectLocalPath),
 
@@ -167,15 +170,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       return merged;
     },
     buildStart() {
-      /* emit a configured module.json */
-      this.emitFile({
-        type: "prebuilt-chunk",
-        fileName: "module.json",
-        code: api.meta.profile.compress
-          ? JSON.stringify(api.cache.manifest)
-          : JSON.stringify(api.cache.manifest, null, 2),
-      });
-
+      
       if (this.meta.watchMode) {
         /* add styles folder for explicit watching */
         let styles = api.meta.config.entryPoints?.style ?? [];
@@ -189,9 +184,32 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         console.log("Watching Styles:", styles);
       }
     },
+    buildEnd() {
+      /* were sockets detected? */
+      if (api.socketDetected) {
+        api.meta.config.socket = true;
+        api.meta.build(true);
+      }
+
+      /* emit a configured module.json */
+      api.manifestId = this.emitFile({
+        type: "prebuilt-chunk",
+        fileName: "module.json",
+        code: api.meta.profile.compress
+        ? JSON.stringify(api.cache.manifest)
+        : JSON.stringify(api.cache.manifest, null, 2),
+      });
+    },
     transform(code) {
       /* replace any usages of %global% with derived value */
       code = api.meta.doReplace(code);
+
+      /* if we can find any instance of 'game.socket' set the
+       * manifest flag post-creation */
+      if( code.includes('game.socket') ) {
+        api.socketDetected |= true;
+      }
+       
       return { code, map: null };
     },
   });
