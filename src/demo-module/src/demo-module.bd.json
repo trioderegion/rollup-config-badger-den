@@ -15,7 +15,11 @@
       "compress":false,
       "sourcemaps": true,
       "clean": false,
-      "hmrStatic": true
+      "hmrStatic": true,
+      "entryPoints": {
+        "main": "dev/buildHTML.mjs"
+      },
+      "profileStatic": ["dev/html"]
     },
     "release":{
       "dest":"../",

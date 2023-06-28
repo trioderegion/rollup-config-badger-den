@@ -2,7 +2,8 @@
   "title": "Badger Den Demo Module",
   "id": "demo-module",
   "esmodules": [
-    "index.mjs"
+    "index.mjs",
+    "dev/buildHTML.mjs"
   ],
   "styles": [
     "static/style.css"

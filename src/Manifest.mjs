@@ -6,6 +6,13 @@ import deepmerge from 'deepmerge';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
+const combineEntryPoints = (a = {}, b = {}) => {
+  const ensureArray = (val) => val instanceof Array ? val : [val];
+  const ensureArrayValues = (obj) => Object.keys(obj).forEach( key => obj[key] = ensureArray(obj[key]) );
+  [a,b].forEach(ensureArrayValues);
+  return deepmerge(a, b);
+}
+
 // Flatten an object to dot notation
 const flatten = (obj, roots = [], sep = ".") =>
   Object.keys(obj).reduce(
@@ -189,7 +196,7 @@ class BDConfig {
       socket: this.config.socket ?? false,
       manifest: "",
       download: "",
-      flags: this.makeFlags(),
+      flags: this.config.flags,
     };
 
     this.#cache.replacements ??= this.pkgReplacements();
@@ -197,19 +204,19 @@ class BDConfig {
     return this.#cache;
   }
 
-  makeFlags() {
+  makeFlags(config, profile) {
     /* grab any direct flags defined */
-    let global = this.config.flags;
-    const profile = this.profile.flags;
+    const global = config.flags ?? {};
+    let local = profile.flags ?? {};
 
     /* grab predefined profile switches */
-    const hmr = this.profile.hmrStatic;
+    const hmr = profile.hmrStatic ?? false;
     if (hmr) {
       const predef = {hotReload: { extensions: ['css', 'html', 'hbs', 'json'] , paths: ['static'] } };
-      global = deepmerge.all([global, profile, predef]);
+      local = deepmerge(local, predef);
     }
 
-    return global;
+    return deepmerge(global, local);
   }
 
   /**
@@ -283,14 +290,16 @@ class BDConfig {
     /* Final resting place is defined 'destination' + packageID */
     profile.dest = path.join(profile.dest, config.id);
 
-    config.entryPoints ??= {};
+    config.entryPoints = combineEntryPoints(config.entryPoints, profile.entryPoints);
     config.dependencies ??= {};
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
-    config.static ??= [];
+    config.static = (config.static ?? []).concat(profile.profileStatic ?? []);
     config.authors ??= [];
-    config.flags ??= {};
+    config.flags = this.makeFlags(config, profile);
+
+    /* merge profile-based overrides into config */
 
     return { profile, config };
   }
