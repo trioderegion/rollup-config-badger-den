@@ -35,6 +35,20 @@
     }
   ],
   "url": "https://www.npmjs.com/",
+  "socket": false,
   "manifest": "",
-  "download": ""
+  "download": "",
+  "flags": {
+    "hotReload": {
+      "extensions": [
+        "css",
+        "html",
+        "hbs",
+        "json"
+      ],
+      "paths": [
+        "static"
+      ]
+    }
+  }
 }

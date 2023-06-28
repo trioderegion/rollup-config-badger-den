@@ -1,3 +1,5 @@
+/** @typedef {import('./Manifest.mjs').BDConfig} BDConfig */
+
 import path from "path";
 import { globSync as glob } from "glob";
 import merge from "rollup-merge-config";
@@ -10,7 +12,16 @@ import postScss from "./scss.config.mjs";
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
-export default ({ config, plugins = { scss: true, compress: true } }) =>
+/**
+ * Get default badger den plugin provided a badger den manifest loader.
+ *
+ * @param {Object} pluginConfig
+ * @param {BDConfig} pluginConf.config
+ * @param {Object<string, boolean|RollupPlugin>} [pluginConf.plugins={scss:true, compress:false}]
+ *
+ * @returns {BadgerDenPlugin}
+ */
+export default ({ config, plugins = { scss: true, compress: false } }) =>
   getPlugin({
     config,
     scssPlug:
@@ -24,9 +35,19 @@ export default ({ config, plugins = { scss: true, compress: true } }) =>
         ? null
         : plugins.compress === true || plugins.compress == undefined
         ? terserPlugin
-        : scss,
+        : compress,
   });
 
+/**
+ * Get plugin with explicit auxilliary plugins
+ *
+ * @param {Object} init
+ * @param {BDConfig} config
+ * @param {RollupPlugin} [scssPlug]
+ * @param {RollupPlugin} [compressPlug]
+ * @param {*} [{ config, scssPlug, compressPlug }={}]
+ * @returns {BadgerDenPlugin}
+ */
 function getPlugin({ config, scssPlug, compressPlug } = {}) {
   /* Some contexts do not forward these system
    * symbols, define them ourself
@@ -44,7 +65,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     },
 
     socketDetected: false,
-    manifestId: '',
+    manifestId: "",
 
     makeInclude: (projectLocalPath) =>
       config.makeInclude(_wdir, projectLocalPath),
@@ -92,7 +113,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         input,
         context: "globalThis",
         plugins: [
-          scssPlug(),
+          scssPlug?.(),
           copy({
             watch: this.meta.watchMode ? staticInputs.map((e) => e.src) : false,
             targets: staticInputs,
@@ -106,7 +127,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
                 force: true,
               })
             : null,
-          api.meta.profile.compress ? compressPlug() : null,
+          api.meta.profile.compress ? compressPlug?.() : null,
           resolve({
             browser: true,
             jsnext: true,
@@ -130,16 +151,12 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     outputOptions(opts) {
       const output = {
         entryFileNames: "[name]",
-        //dir: api.meta.profile.dest,
         format: "es",
         globals: {
           jquery: "$",
         },
         sourcemap: api.meta.profile.sourcemaps,
-        sourcemapPathTransform: (
-          sourcePath,
-          mapFilePath //TODO need to revisit
-        ) => {
+        sourcemapPathTransform: (sourcePath, mapFilePath) => {
           //console.log('profile source', api.meta.profile.src);
           //console.log('profile dest', api.meta.profile.dest);
           sourcePath = posixPath(
@@ -170,7 +187,6 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       return merged;
     },
     buildStart() {
-      
       if (this.meta.watchMode) {
         /* add styles folder for explicit watching */
         let styles = api.meta.config.entryPoints?.style ?? [];
@@ -196,8 +212,8 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         type: "prebuilt-chunk",
         fileName: "module.json",
         code: api.meta.profile.compress
-        ? JSON.stringify(api.cache.manifest)
-        : JSON.stringify(api.cache.manifest, null, 2),
+          ? JSON.stringify(api.cache.manifest)
+          : JSON.stringify(api.cache.manifest, null, 2),
       });
     },
     transform(code) {
@@ -206,10 +222,10 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
 
       /* if we can find any instance of 'game.socket' set the
        * manifest flag post-creation */
-      if( code.includes('game.socket') ) {
+      if (code.includes("game.socket")) {
         api.socketDetected |= true;
       }
-       
+
       return { code, map: null };
     },
   });

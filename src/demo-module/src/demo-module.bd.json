@@ -14,7 +14,8 @@
       "dest":"../",
       "compress":false,
       "sourcemaps": true,
-      "clean": false
+      "clean": false,
+      "hmrStatic": true
     },
     "release":{
       "dest":"../",

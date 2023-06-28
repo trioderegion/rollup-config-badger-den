@@ -2,6 +2,7 @@ import locale from "locale-codes";
 import { globSync as glob } from "glob";
 import path from "path";
 import fs from "fs";
+import deepmerge from 'deepmerge';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
@@ -19,17 +20,29 @@ const flatten = (obj, roots = [], sep = ".") =>
     {}
   );
 
+/**
+ * Class which represents the data contained within a specific Badger Den config file. E.g. './rollup-config-badger-den.bd.json'.
+ *
+ * @class BDConfig
+ */
 class BDConfig {
   #cache = { manifest: null, replacements: null };
+
+  /* Selecte build profile within the config file */
   profile = null;
+
+  /* Full config file */
   config = null;
+
+  /* Replacement namespace */
   namespace = null;
 
   /**
    * Generate manifest data
    *
-   * @param {BadgerDenConfig} config
-   * @param {BadgerDenProfile} profile
+   * @constructor
+   * @param {string} profileURI
+   * @param {string} [namespace='config'] Top level namespace for which all fields inside the declared den config file are available in source code as '%namespace.path.to.field%'.
    */
   constructor(profileURI, namespace = "config") {
     profileURI = path.isAbsolute(profileURI)
@@ -149,6 +162,14 @@ class BDConfig {
     return this.#cache;
   }
 
+  /**
+   * Parses the loaded bd config, constructing and caching the module
+   * manifest data, as well as the namespace replacements.
+   *
+   * @param {boolean} [force=false]
+   * @returns Object
+   * @memberof BDConfig
+   */
   build(force = false) {
     if (force) this.#cache = { manifest: null, replacements: null };
 
@@ -168,6 +189,7 @@ class BDConfig {
       socket: this.config.socket ?? false,
       manifest: "",
       download: "",
+      flags: this.makeFlags(),
     };
 
     this.#cache.replacements ??= this.pkgReplacements();
@@ -175,6 +197,29 @@ class BDConfig {
     return this.#cache;
   }
 
+  makeFlags() {
+    /* grab any direct flags defined */
+    let global = this.config.flags;
+    const profile = this.profile.flags;
+
+    /* grab predefined profile switches */
+    const hmr = this.profile.hmrStatic;
+    if (hmr) {
+      const predef = {hotReload: { extensions: ['css', 'html', 'hbs', 'json'] , paths: ['static'] } };
+      global = deepmerge.all([global, profile, predef]);
+    }
+
+    return global;
+  }
+
+  /**
+   * Reads declared config file and preparing neccessary data
+   * for module building operations.
+   *
+   * @param {string} profileURI
+   * @returns {{profile: Object, config: Object}} 
+   * @memberof BDConfig
+   */
   load(profileURI) {
     const configRel = path.dirname(profileURI);
     const nameProfile = path.basename(profileURI);
@@ -217,6 +262,7 @@ class BDConfig {
     const moduleRoot = path.dirname(configPath);
     profile.src = moduleRoot;
     profile.name = profileName;
+    profile.flags ??= {};
 
     if (!profile.dest) {
       throw new Error(
@@ -244,6 +290,7 @@ class BDConfig {
     config.dependencies.modules ??= {};
     config.static ??= [];
     config.authors ??= [];
+    config.flags ??= {};
 
     return { profile, config };
   }
