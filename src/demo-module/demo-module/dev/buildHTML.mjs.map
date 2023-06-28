@@ -1,1 +1,0 @@
-{"version":3,"file":"buildHTML.mjs","sources":["../src/dev/buildHTML.mjs"],"sourcesContent":["Hooks.on('ready', () => ui.notifications.info('Dev Sub-module Loaded'));\r\n"],"names":[],"mappings":"AAAA,KAAK,CAAC,EAAE,CAAC,OAAO,EAAE,MAAM,EAAE,CAAC,aAAa,CAAC,IAAI,CAAC,uBAAuB,CAAC,CAAC"}

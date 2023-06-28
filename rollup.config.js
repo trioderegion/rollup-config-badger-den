@@ -19,7 +19,7 @@ export default [
       node_externals(),
       resolve({ preferBuiltins: true }),
       copy({
-        targets: [{ src: "src/demo-module/**", dest: "./dist" }],
+        targets: [{ src: "src/demo-module/src/**", dest: "./dist" }],
         flatten: false,
       }),
     ],
