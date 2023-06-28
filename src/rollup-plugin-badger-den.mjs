@@ -193,20 +193,6 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       //console.log(opts, output, merged);
       return merged;
     },
-    buildStart() {
-      if (this.meta.watchMode) {
-        /* add styles folder for explicit watching */
-        //let styles = api.meta.config.entryPoints?.style ?? [];
-        //if (typeof styles == "string") styles = [styles];
-        //styles = styles.flatMap((entry) =>
-        //  glob(api.makeInclude(entry), {
-        //    cwd: api.meta.profile.src,
-        //  }).filter((fp) => !!path.extname(fp))
-        //);
-        //styles.forEach((fp) => this.addWatchFile(fp));
-        //console.log("Watching Styles:", styles);
-      }
-    },
     buildEnd() {
       /* were sockets detected? */
       if (api.socketDetected) {
