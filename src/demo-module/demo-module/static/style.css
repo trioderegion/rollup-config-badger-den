@@ -2,7 +2,7 @@
   --test-var: blue;
 }
 
-div {
+div, h1 {
   border: none;
 }
 

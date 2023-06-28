@@ -103,17 +103,24 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
 
       console.log("Input Modules:", input);
 
-      let staticWatch = this.meta.watchMode;
-      if (staticWatch) {
+      let staticWatch = [];
+      let styleWatch = config.styleSources;
+      if (this.meta.watchMode) {
         staticWatch = staticInputs.map((e) => e.src);
-        console.log("Watching Static:", staticWatch);
+        console.log("Watching Static:", staticWatch );
+        styleWatch = styleWatch.map( s => api.makeInclude(s) );
+        console.log("Watching Styles:", styleWatch );
       }
+
+      //console.log('SCSS Files ---', config.styleSources);
 
       const fvttOpts = {
         input,
         context: "globalThis",
         plugins: [
-          scssPlug?.(),
+          scssPlug?.({
+            watch: this.meta.watchMode ? styleWatch : false,
+          }),
           copy({
             watch: this.meta.watchMode ? staticInputs.map((e) => e.src) : false,
             targets: staticInputs,
@@ -189,15 +196,15 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     buildStart() {
       if (this.meta.watchMode) {
         /* add styles folder for explicit watching */
-        let styles = api.meta.config.entryPoints?.style ?? [];
-        if (typeof styles == "string") styles = [styles];
-        styles = styles.flatMap((entry) =>
-          glob(api.makeInclude(entry), {
-            cwd: api.meta.profile.src,
-          }).filter((fp) => !!path.extname(fp))
-        );
-        styles.forEach((fp) => this.addWatchFile(fp));
-        console.log("Watching Styles:", styles);
+        //let styles = api.meta.config.entryPoints?.style ?? [];
+        //if (typeof styles == "string") styles = [styles];
+        //styles = styles.flatMap((entry) =>
+        //  glob(api.makeInclude(entry), {
+        //    cwd: api.meta.profile.src,
+        //  }).filter((fp) => !!path.extname(fp))
+        //);
+        //styles.forEach((fp) => this.addWatchFile(fp));
+        //console.log("Watching Styles:", styles);
       }
     },
     buildEnd() {

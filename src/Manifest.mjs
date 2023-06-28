@@ -298,11 +298,14 @@ class BDConfig {
   get styleSources() {
     let styles = this.config.entryPoints?.style ?? [];
     if (typeof styles == "string") styles = [styles];
-    styles = styles.flatMap((entry) =>
-      glob(api.makeInclude(this.profile.src, entry), {
+    styles = styles.flatMap((entry) => {
+      const found = glob(this.makeInclude(this.profile.src, entry), {
         cwd: this.profile.src,
       }).filter((fp) => !!path.extname(fp))
-    );
+      return found;
+    });
+
+    return styles;
   }
 
   makeInclude(root, target) {
