@@ -144,11 +144,26 @@ class BDConfig {
         .filter((lang) => !!lang);
     });
 
+    /* Discovered document types */
+    const defFiles = glob('**/*.bdt.json', {cwd: profile.src});
+    const documentTypes = defFiles.reduce( (acc, file)=>{
+      const fullPath = path.join(profile.src, file);
+      const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
+      
+      const {base} = path.parse(fullPath);
+      const id = base.split('.').at(0);
+      acc[type] ??= {}
+      acc[type][id] = def;
+      
+      return acc;
+    }, {} );
+
     console.log("Entry Points:", { esmodules, externals });
     console.log("Root Styles:", styles);
     console.log("Languages:", languages);
+    if (defFiles.length > 0) console.log("Document Types:", ...Reflect.ownKeys(documentTypes).map( type => `${type}[${Reflect.ownKeys(documentTypes[type]).join('.')}]` ))
 
-    return { esmodules, styles, languages, externals };
+    return { esmodules, styles, languages, documentTypes, externals };
   };
 
   compat = ([min, curr, max]) => {

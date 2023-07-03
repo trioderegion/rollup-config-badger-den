@@ -1,0 +1,11 @@
+{
+  "type": "Item",
+  "htmlFields": [
+    "description.value",
+    "description.chat",
+    "description.unidentified"
+  ],
+  "filePathFields": {
+    "img": ["IMAGE"]
+  }
+}
