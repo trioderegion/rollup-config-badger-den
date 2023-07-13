@@ -4,16 +4,16 @@ export default () =>
   terser({
     compress: {
       booleans_as_integers: false,
-      passes: 3,
-      unsafe: {
-        compress: true,
-      },
+      passes: 2,
     },
-    mangle: {
-      toplevel: true,
-      properties: false,
+    mangle:false,
+    format: {
+      ecma: 2016,
+      indent_level: 2,
+      quote_style: 3, //original quotes
+      keep_quoted_props: true,
+      braces:true,
     },
-    ecma: 2020,
     module: true,
-    nameCache: {},
+    nameCache: null,
   });
