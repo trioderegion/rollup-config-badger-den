@@ -1,7 +1,7 @@
 /** @typedef {import('./Manifest.mjs').BDConfig} BDConfig */
 
 import path from "path";
-import { globSync as glob } from "glob";
+//import { globSync as glob } from "glob";
 import merge from "rollup-merge-config";
 import del from "rollup-plugin-delete"; //cleaning output directory
 import copy from "rollup-plugin-copy-watch"; //watching non-directly referenced files
@@ -107,25 +107,17 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       let styleWatch = config.styleSources;
       if (this.meta.watchMode) {
         staticWatch = staticInputs.map((e) => e.src);
-        console.log("Watching Static:", staticWatch );
-        styleWatch = styleWatch.map( s => api.makeInclude(s) );
-        console.log("Watching Styles:", styleWatch );
+        console.log("Watching Static:", staticWatch);
+        styleWatch = styleWatch.map((s) => api.makeInclude(s));
+        console.log("Watching Styles:", styleWatch);
       }
 
-      //console.log('SCSS Files ---', config.styleSources);
+      console.log("SCSS Files:", config.styleSources);
 
       const fvttOpts = {
         input,
         context: "globalThis",
         plugins: [
-          scssPlug?.({
-            watch: this.meta.watchMode ? styleWatch : false,
-          }),
-          copy({
-            watch: this.meta.watchMode ? staticInputs.map((e) => e.src) : false,
-            targets: staticInputs,
-            verbose: true,
-          }),
           api.meta.profile.clean
             ? del({
                 targets: [api.meta.profile.dest],
@@ -134,11 +126,19 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
                 force: true,
               })
             : null,
+          scssPlug?.({
+            watch: this.meta.watchMode ? styleWatch : false,
+          }),
           api.meta.profile.compress ? compressPlug?.() : null,
           resolve({
             browser: true,
             jsnext: true,
             preferBuiltins: false,
+          }),
+          copy({
+            watch: this.meta.watchMode ? staticInputs.map((e) => e.src) : false,
+            targets: staticInputs,
+            verbose: true,
           }),
         ],
       };

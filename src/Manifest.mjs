@@ -2,16 +2,20 @@ import locale from "locale-codes";
 import { globSync as glob } from "glob";
 import path from "path";
 import fs from "fs";
-import deepmerge from 'deepmerge';
+import deepmerge from "deepmerge";
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
 const combineEntryPoints = (a = {}, b = {}) => {
-  const ensureArray = (val) => val instanceof Array ? val : [val];
-  const ensureArrayValues = (obj) => Object.keys(obj).forEach( key => obj[key] = ensureArray(obj[key]) );
-  [a,b].forEach(ensureArrayValues);
+  const ensureArray = (val) => (val instanceof Array ? val : [val]);
+  const ensureArrayValues = (obj) =>
+    Object.keys(obj).forEach((key) => {
+      if (key == "compendia") obj[key]["path"] = ensureArray(obj[key]["path"]);
+      else obj[key] = ensureArray(obj[key]);
+    });
+  [a, b].forEach(ensureArrayValues);
   return deepmerge(a, b);
-}
+};
 
 // Flatten an object to dot notation
 const flatten = (obj, roots = [], sep = ".") =>
@@ -87,14 +91,18 @@ class BDConfig {
     let esmodules = entryPoints.main ?? [];
     if (typeof esmodules == "string") esmodules = [esmodules];
     esmodules = esmodules.flatMap((entry) =>
-      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp)).map(posixPath)
+      glob(entry, { cwd: profile.src })
+        .filter((fp) => !!path.extname(fp))
+        .map(posixPath)
     );
 
     /* Externals */
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, { cwd: profile.src }).filter((fp) => !!path.extname(fp)).map(posixPath)
+      glob(entry, { cwd: profile.src })
+        .filter((fp) => !!path.extname(fp))
+        .map(posixPath)
     );
 
     /* Compiled Styles */
@@ -104,18 +112,20 @@ class BDConfig {
       glob(entry, { cwd: profile.src })
         .filter((fp) => !!path.extname(fp) && path.parse(fp).base[0] != "_")
         .map((fp) =>
-          posixPath(path.relative(
-            profile.src,
-            path.join(
+          posixPath(
+            path.relative(
               profile.src,
-              "static",
-              path.format({
-                name: path.parse(fp).name,
-                ext: ".css",
-              })
+              path.join(
+                profile.src,
+                "static",
+                path.format({
+                  name: path.parse(fp).name,
+                  ext: ".css",
+                })
+              )
             )
           )
-        ))
+        )
     );
 
     /* Discovered Languages */
@@ -133,10 +143,9 @@ class BDConfig {
             return {
               lang,
               name,
-              path: posixPath(path.relative(
-                profile.src,
-                path.join(profile.src, filename)
-              )),
+              path: posixPath(
+                path.relative(profile.src, path.join(profile.src, filename))
+              ),
             };
           }
           return null;
@@ -145,25 +154,83 @@ class BDConfig {
     });
 
     /* Discovered document types */
-    const defFiles = glob('**/*.bdt.json', {cwd: profile.src});
-    const documentTypes = defFiles.reduce( (acc, file)=>{
+    const defFiles = glob("**/*.bdt.json", { cwd: profile.src });
+    const documentTypes = defFiles.reduce((acc, file) => {
       const fullPath = path.join(profile.src, file);
-      const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
-      
-      const {base} = path.parse(fullPath);
-      const id = base.split('.').at(0);
-      acc[type] ??= {}
+      const { type, ...def } = JSON.parse(fs.readFileSync(fullPath));
+
+      const { base } = path.parse(fullPath);
+      const id = base.split(".").at(0);
+      acc[type] ??= {};
       acc[type][id] = def;
-      
+
       return acc;
-    }, {} );
+    }, {});
+
+    //TODO allow key:string definitions in addition to key:pack:string
+    //as shorthand for "same for all discovered".
+    /* Discovered compendium source folders */
+    /* 1) Enumerate folders of provided paths
+     * 2) Dissect child folder name to find type and name: <type>_<name>
+     * 3) Construct object of 'name' to {entry data}
+     * 4) Grab all other keys inside 'compendia' root to insert into each entry value
+     * 5) return as array of values in 'packs' field
+     */
+    const paths = entryPoints.compendia?.path ?? [];
+    const packFolders = paths.flatMap((p) => {
+      if (p.at(-1) != "/") p += "/";
+      return glob(p, { cwd: profile.src });
+    });
+
+    const getPackValue = (name, property) => {
+      const val = entryPoints.compendia[property];
+      if (!val) return null;
+      if (typeof val == "string") return val;
+
+      return val[name];
+    };
+
+    const compendiumFields = Reflect.ownKeys(entryPoints.compendia ?? {}).filter(
+      (key) => !key.includes("path")
+    );
+
+    const packs = packFolders.map((folder) => {
+      const folderPath = posixPath(folder);
+      const parsed = path.parse(folderPath);
+      const { name } = parsed;
+
+      parsed.base = parsed.name = name;
+      const packPath = posixPath(path.format(parsed));
+
+      //console.log(folderPath, parsed, packPath, type, name);
+
+      const entry = { name, path: packPath };
+      compendiumFields.forEach((opt) => {
+        const val = getPackValue(name, opt);
+        if (!!val) entry[opt] = val;
+      });
+
+      /* adjust path for images (CSS is a pain) */
+      if ("banner" in entry) {
+        entry["banner"] = `modules/${this.config.id}/${entry["banner"]}`;
+      }
+
+      return entry;
+    });
 
     console.log("Entry Points:", { esmodules, externals });
     console.log("Root Styles:", styles);
     console.log("Languages:", languages);
-    if (defFiles.length > 0) console.log("Document Types:", ...Reflect.ownKeys(documentTypes).map( type => `${type}[${Reflect.ownKeys(documentTypes[type]).join('.')}]` ))
+    console.log("Compendia:", packs);
+    if (defFiles.length > 0)
+      console.log(
+        "Document Types:",
+        ...Reflect.ownKeys(documentTypes).map(
+          (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
+        )
+      );
 
-    return { esmodules, styles, languages, documentTypes, externals };
+    return { esmodules, styles, languages, packs, documentTypes, externals };
   };
 
   compat = ([min, curr, max]) => {
@@ -225,9 +292,14 @@ class BDConfig {
     let local = profile.flags ?? {};
 
     /* grab predefined profile switches */
-    const hmr = profile.hmrStatic ?? false;
+    const hmr = profile.hmr ?? false;
     if (hmr) {
-      const predef = {hotReload: { extensions: ['css', 'html', 'hbs', 'json'] , paths: ['static'] } };
+      const predef = {
+        hotReload: {
+          extensions: ["css", "html", "hbs", "json"],
+          paths: ["static"],
+        },
+      };
       local = deepmerge(local, predef);
     }
 
@@ -239,7 +311,7 @@ class BDConfig {
    * for module building operations.
    *
    * @param {string} profileURI
-   * @returns {{profile: Object, config: Object}} 
+   * @returns {{profile: Object, config: Object}}
    * @memberof BDConfig
    */
   load(profileURI) {
@@ -305,12 +377,15 @@ class BDConfig {
     /* Final resting place is defined 'destination' + packageID */
     profile.dest = path.join(profile.dest, config.id);
 
-    config.entryPoints = combineEntryPoints(config.entryPoints, profile.entryPoints);
+    config.entryPoints = combineEntryPoints(
+      config.entryPoints,
+      profile.entryPoints
+    );
     config.dependencies ??= {};
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
-    config.static = (config.static ?? []).concat(profile.profileStatic ?? []);
+    config.static = (config.static ?? []).concat(profile.static ?? []);
     config.authors ??= [];
     config.flags = this.makeFlags(config, profile);
 
@@ -325,7 +400,7 @@ class BDConfig {
     styles = styles.flatMap((entry) => {
       const found = glob(this.makeInclude(this.profile.src, entry), {
         cwd: this.profile.src,
-      }).filter((fp) => !!path.extname(fp))
+      }).filter((fp) => !!path.extname(fp));
       return found;
     });
 
@@ -333,9 +408,7 @@ class BDConfig {
   }
 
   makeInclude(root, target) {
-    return posixPath(path
-      .join(path.relative(root, this.profile.src), target));
-      
+    return posixPath(path.join(path.relative(root, this.profile.src), target));
   }
 }
 

@@ -7,7 +7,17 @@
     "main": "index.mjs",
     "style": "scss/*",
     "external": "lib/tiny.mjs",
-    "lang": "static/lang/**"
+    "lang": "static/lang/**",
+    "compendia": {
+      "path": "packs/*/",
+      "label": {
+        "demo-items": "Demo Items"
+      },
+      "banner": {
+        "sgeh-items": "static/assets/banner.webp"
+      }
+
+    }
   },
   "profile": {
     "dev":{
