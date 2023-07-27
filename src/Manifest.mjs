@@ -281,6 +281,12 @@ class BDConfig {
       flags: this.config.flags,
     };
 
+    if (this.profile.premium) {
+      delete this.#cache.manifest.download
+      this.#cache.manifest.manifest = `https://foundryvtt.s3.us-west-2.amazonaws.com/modules/${this.config.id}/module.json`;
+      this.#cache.manifest.protected = true;
+    }
+
     this.#cache.replacements ??= this.pkgReplacements();
 
     return this.#cache;
