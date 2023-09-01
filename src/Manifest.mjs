@@ -33,7 +33,7 @@ const flatten = (obj, roots = [], sep = ".") =>
 
 /**
  * Class which represents the data contained within a specific Badger Den config file. E.g. './rollup-config-badger-den.bd.json'.
- *
+ * 
  * @class BDConfig
  */
 class BDConfig {
@@ -244,7 +244,7 @@ class BDConfig {
   makeDep = (deps) =>
     Object.entries(deps).map(([id, versions]) => ({
       id,
-      compatibility: compat(versions),
+      compatibility: this.compat(versions),
     }));
 
   get cache() {

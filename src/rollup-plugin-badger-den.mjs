@@ -1,4 +1,6 @@
-/** @typedef {import('./Manifest.mjs').BDConfig} BDConfig */
+/** @typedef {import('./Manifest.mjs').default} BDConfig */
+/** @typedef {import('rollup').Plugin} RollupPlugin */
+/** @typedef {import('rollup').PluginImpl} PluginImpl */
 
 import path from "path";
 //import { globSync as glob } from "glob";
@@ -17,9 +19,9 @@ const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
  *
  * @param {Object} pluginConfig
  * @param {BDConfig} pluginConf.config
- * @param {Object<string, boolean|RollupPlugin>} [pluginConf.plugins={scss:true, compress:false}]
+ * @param {Object<string, Boolean|RollupPlugin>} [pluginConf.plugins={scss:true, compress:false}]
  *
- * @returns {BadgerDenPlugin}
+ * @returns {PluginImpl}
  */
 export default ({ config, plugins = { scss: true, compress: false } }) =>
   getPlugin({
@@ -37,16 +39,18 @@ export default ({ config, plugins = { scss: true, compress: false } }) =>
         ? terserPlugin
         : compress,
   });
+/** 
+ * @typedef {Object} BDInitOptions
+ * @prop {BDConfig} config
+ * @prop {RollupPlugin} scssPlug
+ * @prop {RollupPlugin} compressPlug
+ */
 
 /**
- * Get plugin with explicit auxilliary plugins
+ * Get badgerden plugin with explicit auxilliary plugins
  *
- * @param {Object} init
- * @param {BDConfig} config
- * @param {RollupPlugin} [scssPlug]
- * @param {RollupPlugin} [compressPlug]
- * @param {*} [{ config, scssPlug, compressPlug }={}]
- * @returns {BadgerDenPlugin}
+ * @param {BDInitOptions} [init={}]
+ * @returns {PluginImpl}
  */
 function getPlugin({ config, scssPlug, compressPlug } = {}) {
   /* Some contexts do not forward these system
