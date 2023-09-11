@@ -38,7 +38,8 @@
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-scss": "^4.0.0",
-    "rollup-plugin-sourcemaps": "^0.6.3"
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "js-yaml": "^4.1.0"
   },
   "devDependencies": {
     "@shon/tiny": "^2.3.0",
