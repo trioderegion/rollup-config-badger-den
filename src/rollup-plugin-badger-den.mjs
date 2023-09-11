@@ -11,6 +11,7 @@ import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_
 
 import terserPlugin from "./terser.config.mjs";
 import postScss from "./scss.config.mjs";
+import {pack as packCompendium} from './pack.mjs';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
@@ -197,7 +198,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       //console.log(opts, output, merged);
       return merged;
     },
-    buildEnd() {
+    async buildEnd() {
       /* were sockets detected? */
       if (api.socketDetected) {
         api.meta.config.socket = true;
@@ -212,6 +213,18 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
           ? JSON.stringify(api.cache.manifest)
           : JSON.stringify(api.cache.manifest, null, 2),
       });
+
+      /* should we pack compendiums? */
+      if (api.meta.profile.pack) {
+        const packPromises = api.cache.manifest.packs.map( pack => {
+          const input = api.makeInclude(pack.path);
+          const output = path.join(api.meta.profile.dest, path.dirname(pack.path));
+          console.log(`Packing: ${pack.label} ( ${pack.path} | ${pack.type} )`);
+          return packCompendium(input, {output});
+        });
+
+        await Promise.all(packPromises);
+      }
     },
     transform(code) {
       /* replace any usages of %global% with derived value */

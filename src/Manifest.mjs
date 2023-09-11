@@ -218,10 +218,17 @@ class BDConfig {
       return entry;
     });
 
+    const folder = entryPoints.compendia?.folder ?? {};
+    const packFolderEntries = [];
+    if ('label' in folder) {
+      packFolderEntries.push({name: folder.label, color: folder.color ?? '#000000', packs: packs.map( p => p.name )});
+    }
+
     console.log("Entry Points:", { esmodules, externals });
     console.log("Root Styles:", styles);
     console.log("Languages:", languages);
     console.log("Compendia:", packs);
+    console.log("Folders:", packFolderEntries);
     if (defFiles.length > 0)
       console.log(
         "Document Types:",
@@ -230,7 +237,7 @@ class BDConfig {
         )
       );
 
-    return { esmodules, styles, languages, packs, documentTypes, externals };
+    return { esmodules, styles, languages, packs, packFolders: packFolderEntries, documentTypes, externals };
   };
 
   compat = ([min, curr, max]) => {
