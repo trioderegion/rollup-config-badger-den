@@ -7,7 +7,7 @@ File name must end in `.bd.json`. If an `id` field is not provided in the file, 
 
 [See Den Config Definition](https://trioderegion.github.io/rollup-config-badger-den/docs/global.html#DenConfigJSON) for full explation of each required and optional field in this file.
 
-[Example Config File](https://github.com/trioderegion/rollup-config-badger-den/blob/master/src/demo-module/src/demo-module.bd.json)
+[Example Config File](https://trioderegion.github.io/rollup-config-badger-den/global.html#DenProfileJSON)
 
 ### NPM Scripts
 `rollup -c node:rollup-config-badger-den --config-den src/my-module:dev`
