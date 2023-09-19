@@ -5,7 +5,7 @@
 npm-debug.log
 coverage/
 debug/
-docs/
+
 node_modules/
 *.sw*
 src/demo-module/demo-module/
