@@ -200,7 +200,7 @@ class BDConfig {
     });
 
     /* Discovered document types */
-    const defFiles = glob("./**/*.bdt.json", { cwd: profile.src });
+    const defFiles = glob("**/*.bdt.json", { cwd: profile.src });
     const documentTypes = defFiles.reduce((acc, file) => {
       const fullPath = path.join(profile.src, file);
       const { type, ...def } = JSON.parse(fs.readFileSync(fullPath));
