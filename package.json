@@ -9,7 +9,7 @@
     ".": "./dist/index.mjs"
   },
   "files": [
-    "dist/**"
+    "dist/index.mjs"
   ],
   "scripts": {
     "build": "rollup --config",

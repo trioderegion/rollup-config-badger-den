@@ -2,7 +2,7 @@
  * Rollup plugin imports
  ******************/
 import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_modules
-import copy from "rollup-plugin-copy";
+//import copy from "rollup-plugin-copy";
 import node_externals from "rollup-plugin-node-externals";
 
 export default [
@@ -18,9 +18,9 @@ export default [
     plugins: [
       node_externals(),
       resolve({ preferBuiltins: true }),
-      copy({
-        targets: [{ src: "src/demo-module/src/**", dest: "./dist" }],
-        flatten: false,
-      }),
+      //copy({
+      //  targets: [{ src: "src/demo-module/src/**", dest: "./dist" }],
+      //  flatten: false,
+      //}),
     ],
   }];
