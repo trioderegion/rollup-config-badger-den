@@ -1,6 +1,6 @@
 {
   "name": "rollup-config-badger-den",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "homepage": "https://github.com/trioderegion/rollup-config-badger-den",
   "description": "Configurable rollup plugin/template for bundling FVTT modules.",
   "license": "MIT",
