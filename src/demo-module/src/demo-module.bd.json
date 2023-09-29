@@ -20,7 +20,7 @@
     }
   },
   "profile": {
-    "dev":{
+    "test":{
       "dest":"../",
       "compress":false,
       "sourcemaps": true,
@@ -30,12 +30,6 @@
         "main": "dev/buildHTML.mjs"
       },
       "profileStatic": ["dev/html"]
-    },
-    "release":{
-      "dest":"../",
-      "compress":true,
-      "sourcemaps": true,
-      "clean": true
     }
   },
   "dependencies": {
