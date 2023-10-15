@@ -459,6 +459,7 @@ class BDConfig {
     styles = styles.flatMap((entry) => {
       const found = glob(this.makeInclude(this.profile.src, entry), {
         cwd: this.profile.src,
+        gitignore: true,
       }).filter((fp) => !!path.extname(fp));
       return found;
     });

@@ -69,6 +69,8 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       return config.cache;
     },
 
+    ranOnce: false,
+
     socketDetected: false,
     manifestId: "",
 
@@ -107,17 +109,13 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       );
 
       console.log("Input Modules:", input);
+      console.log("Input Styles:", config.styleSources);
 
       let staticWatch = [];
-      let styleWatch = config.styleSources;
       if (this.meta.watchMode) {
         staticWatch = staticInputs.map((e) => e.src);
         console.log("Watching Static:", staticWatch);
-        styleWatch = styleWatch.map((s) => api.makeInclude(s));
-        console.log("Watching Styles:", styleWatch);
       }
-
-      console.log("SCSS Files:", config.styleSources);
 
       const fvttOpts = {
         input,
@@ -126,39 +124,41 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
           api.meta.profile.clean
             ? del({
                 targets: [api.meta.profile.dest],
-                runOnce: false,
+                runOnce: true,
                 verbose: false,
                 force: true,
               })
             : null,
-          scssPlug?.({
-            watch: this.meta.watchMode ? styleWatch : false,
-          }),
           api.meta.profile.compress ? compressPlug?.() : null,
+          copy({
+            hook: 'buildEnd',
+            copySync:true,
+            chokidar: true,
+            watch: this.meta.watchMode && !api.ranOnce ? staticWatch : false,
+            targets: staticInputs,
+            verbose: true,
+          }),
           resolve({
             browser: true,
             jsnext: true,
             preferBuiltins: false,
           }),
-          copy({
-            watch: this.meta.watchMode ? staticInputs.map((e) => e.src) : false,
-            targets: staticInputs,
-            verbose: true,
-          }),
+          scssPlug?.(),
         ],
       };
-
+      api.ranOnce |= true;
       if (this.meta.watchMode) {
         fvttOpts.watch = {
-          include: [api.makeInclude("/**")],
+          chokidar: true,
+          include: [api.makeInclude("/**/*.*js")],
           exclude: ["*.sw*", "*.bd.json"],
           clearScreen: true,
         };
 
         console.log("Watching Code:", ...fvttOpts.watch.include);
-      }
-
-      return merge(opts, fvttOpts);
+      };
+      opts = merge(opts, fvttOpts);
+      return opts
     },
     outputOptions(opts) {
       const output = {
@@ -169,34 +169,37 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         },
         sourcemap: api.meta.profile.sourcemaps,
         sourcemapPathTransform: (sourcePath, mapFilePath) => {
-          //console.log('profile source', api.meta.profile.src);
-          //console.log('profile dest', api.meta.profile.dest);
           sourcePath = posixPath(
             path.resolve(path.join(path.dirname(mapFilePath), sourcePath))
           );
           mapFilePath = posixPath(mapFilePath);
-          //console.log('sourcePath', sourcePath, 'mapFilePath', mapFilePath);
           const stripModule = new RegExp(`(.*${api.meta.config.id}\/)`);
           const sourceLocal = posixPath(path.resolve(sourcePath)).replace(
             stripModule,
             ""
           );
-          //console.log('sourceLocal', sourceLocal);
 
           const mapLocal = mapFilePath.replace(stripModule, "");
-          //console.log('mapLocal', mapLocal);
 
           const sourceMapRel = path.relative(
             path.dirname(mapLocal),
             sourceLocal
           );
-          //console.log('sourceMapRel', sourceMapRel, '\n');
           return sourceMapRel;
         },
       };
       const merged = merge(opts, output);
-      //console.log(opts, output, merged);
       return merged;
+    },
+    buildStart(){
+      if (this.meta.watchMode) {
+        const styleWatch = config.styleSources.map( s => {
+          const file = api.makeInclude(s);
+          this.addWatchFile(file)
+          return file;
+        })
+        console.log("Watching Styles:", styleWatch);
+      }
     },
     async buildEnd() {
       /* were sockets detected? */
