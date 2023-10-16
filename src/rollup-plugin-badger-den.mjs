@@ -112,16 +112,19 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       console.log("Input Styles:", config.styleSources);
 
       let staticWatch = [];
+      let styleWatch = [];
       if (this.meta.watchMode) {
         staticWatch = staticInputs.map((e) => e.src);
         console.log("Watching Static:", staticWatch);
+
+        styleWatch = config.styleSources.map( s => api.makeInclude(s) );
       }
 
       const fvttOpts = {
         input,
         context: "globalThis",
         plugins: [
-          api.meta.profile.clean
+          api.meta.profile.clean && !api.ranOnce
             ? del({
                 targets: [api.meta.profile.dest],
                 runOnce: true,
@@ -143,7 +146,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
             jsnext: true,
             preferBuiltins: false,
           }),
-          scssPlug?.(),
+          scssPlug?.({watch: this.meta.watchMode ? styleWatch : false}),
         ],
       };
       api.ranOnce |= true;
