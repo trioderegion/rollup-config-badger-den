@@ -81,9 +81,8 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       path.relative(workingDir, path.join(targetRoot, rootInputPath)),
   };
 
-  /* custom plugin allowing a watcher
-   * on the package.json so we dont ever
-   * need to touch the module.json
+  /** 
+   * custom plugin with watching support
    */
   const rollupPlug = () => ({
     name: "rollup-plugin-badger-den",

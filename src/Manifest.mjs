@@ -215,7 +215,6 @@ class BDConfig {
 
     /* Discovered compendium source folders */
     /* 1) Enumerate folders of provided paths
-     * 2) Dissect child folder name to find type and name: <type>_<name>
      * 3) Construct object of 'name' to {entry data}
      * 4) Grab all other keys inside 'compendia' root to insert into each entry value
      * 5) return as array of values in 'packs' field
@@ -355,7 +354,7 @@ class BDConfig {
       const predef = {
         hotReload: {
           extensions: ["css", "html", "hbs", "json"],
-          paths: ["static"],
+          paths: config.static, 
         },
       };
       local = deepmerge(local, predef);

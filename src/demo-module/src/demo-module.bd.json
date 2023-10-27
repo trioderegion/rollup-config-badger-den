@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "title": "Badger Den Demo Module",
   "description": "Demonstration module built from the Badger Den",
-  "projectUrl": "https://www.npmjs.com/",
+  "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
   "entryPoints": {
     "main": "index.mjs",
     "style": "scss/*",
@@ -25,11 +25,11 @@
       "compress":false,
       "sourcemaps": true,
       "clean": false,
-      "hmrStatic": true,
+      "hmr": true,
       "entryPoints": {
         "main": "dev/buildHTML.mjs"
       },
-      "profileStatic": ["dev/html"]
+      "static": ["dev/html"]
     }
   },
   "dependencies": {

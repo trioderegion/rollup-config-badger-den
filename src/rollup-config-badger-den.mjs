@@ -19,7 +19,6 @@ const defineConfig = ({denConfig = null, denPlug = bdPlug} = {}) => {
 
   if (typeof denConfig == 'string') {
     /* Assume this is a raw config path and load it */    
-    console.log
     denConfig = new loader(denConfig);
   }
 
