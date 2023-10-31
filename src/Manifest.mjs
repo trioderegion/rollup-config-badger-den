@@ -346,7 +346,7 @@ class BDConfig {
       const predef = {
         hotReload: {
           extensions: ["css", "html", "hbs", "json"],
-          paths: config.static, 
+          //paths: [config.static, 
         },
       };
       local = deepmerge(local, predef);
