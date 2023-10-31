@@ -13,8 +13,8 @@
   ],
   "scripts": {
     "build": "rollup --config",
-    "release": "np",
-    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:dev",
+    "release": "npm run build && np",
+    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test",
     "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test",
     "docs": "jsdoc --configure jsdoc.json --verbose"
   },
