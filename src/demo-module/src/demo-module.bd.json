@@ -5,7 +5,6 @@
   "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
   "entryPoints": {
     "main": "index.mjs",
-    "style": "scss/*",
     "external": "lib/tiny.mjs",
     "lang": "static/lang/**",
     "compendia": {
@@ -24,7 +23,7 @@
       "dest":"../",
       "compress":false,
       "sourcemaps": true,
-      "clean": false,
+      "clean": true,
       "hmr": true,
       "entryPoints": {
         "main": "dev/buildHTML.mjs"

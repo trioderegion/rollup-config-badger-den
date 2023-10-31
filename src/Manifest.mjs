@@ -18,13 +18,11 @@ import deepmerge from "deepmerge";
  * @typedef {Object} EntryPointJSON
  * @prop {string|string[]} main
  * @prop {string|string[]} [lang]
- * @prop {string|string[]} [style]
  * @prop {CompendiaJSON} [compendia]
  */
 
 /** 
  * @typedef {Object} DenProfileJSON
- * @extends DenConfigJSON
  * @prop {string} dest
  * @prop {boolean} [compress]
  * @prop {boolean} [sourcemaps]
@@ -132,6 +130,19 @@ class BDConfig {
     return targetString;
   };
 
+  enumerateStatics(config = {}, profile = {}) {
+    config.static ??= [];
+    profile.static ??=[];
+
+    if (typeof config.static == "string") config.static = [config.static];
+    if (typeof profile.static == "string") profile.static = [profile.static];
+
+    const globs = config.static.concat(profile.static).map( path => posixPath(path) );
+
+    const staticFiles = glob(globs, { cwd: profile.src, onlyFiles: true, unique: true, matchBase: true, posix: true, ignore: ['*.scss', '*.sw*', '*.tmp'] });
+    return staticFiles;
+  }
+
   makeEntryPointFields = (entryPoints, profile = this.profile) => {
     /* ES Modules */
     let esmodules = entryPoints.main ?? [];
@@ -146,33 +157,13 @@ class BDConfig {
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, { cwd: profile.src })
-        .filter((fp) => !!path.extname(fp))
+      glob(entry, { cwd: profile.src, onlyFiles: true })
         .map(posixPath)
     );
 
     /* Compiled Styles */
-    let styles = entryPoints.style ?? [];
-    if (typeof styles == "string") styles = [styles];
-    styles = styles.flatMap((entry) =>
-      glob(entry, { cwd: profile.src })
-        .filter((fp) => !!path.extname(fp) && path.parse(fp).base[0] != "_")
-        .map((fp) =>
-          posixPath(
-            path.relative(
-              profile.src,
-              path.join(
-                profile.src,
-                "static",
-                path.format({
-                  name: path.parse(fp).name,
-                  ext: ".css",
-                })
-              )
-            )
-          )
-        )
-    );
+    const styles = [this.config.id + '.css'];
+    this.config.styleSources = glob("**/*.scss", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
 
     /* Discovered Languages */
     let languages = entryPoints.lang ?? [];
@@ -267,18 +258,19 @@ class BDConfig {
       packFolderEntries.push({name: folder.label, color: folder.color ?? '#000000', packs: packs.map( p => p.name )});
     }
 
-    console.log("Entry Points:", { esmodules, externals });
-    console.log("Root Styles:", styles);
-    console.log("Languages:", languages);
-    console.log("Compendia:", packs);
-    console.log("Folders:", packFolderEntries);
+    console.log("Entry Points:", [...esmodules, ...externals]);
+    if (styles.length > 0 ) console.log("Discovered Styles:", this.config.styleSources);
+    if (languages.length > 0) console.log("Discovered Languages:", languages.map( lang => `${lang.name} (${lang.path})`));
+    if (packs.length > 0) console.log("Compendia:", packs.map( p => p.path ));
+    if (packFolderEntries.length > 0) console.log("Folders:", packFolderEntries);
     if (defFiles.length > 0)
       console.log(
-        "Document Types:",
-        ...Reflect.ownKeys(documentTypes).map(
+        "Discovered Sub-Types:",
+        Reflect.ownKeys(documentTypes).map(
           (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
         )
       );
+    if (this.config.static.length > 0) console.log("Static Files:", this.config.static);
 
     return { esmodules, styles, languages, packs, packFolders: packFolderEntries, documentTypes, externals };
   };
@@ -395,11 +387,11 @@ class BDConfig {
 
     /** @type DenConfigJSON */
     const config = JSON.parse(fs.readFileSync(configPath));
-
+    config.name = configName;
     if (!("id" in config)) {
-      console.warn(
-        `...Den config missing "id" field -- using config file name "${configName}."`
-      );
+      //console.warn(
+      //  `...Den config missing "id" field -- using config file name "${configName}."`
+      //);
       config.id = configName;
     }
 
@@ -443,27 +435,19 @@ class BDConfig {
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
-    config.static = (config.static ?? []).concat(profile.static ?? []);
+    config.static = this.enumerateStatics(config, profile);
     config.authors ??= [];
     config.flags = this.makeFlags(config, profile);
 
     /* merge profile-based overrides into config */
+    this.config = config;
+    this.profile = profile;
 
     return { profile, config };
   }
 
   get styleSources() {
-    let styles = this.config.entryPoints?.style ?? [];
-    if (typeof styles == "string") styles = [styles];
-    styles = styles.flatMap((entry) => {
-      const found = glob(this.makeInclude(this.profile.src, entry), {
-        cwd: this.profile.src,
-        gitignore: true,
-      }).filter((fp) => !!path.extname(fp));
-      return found;
-    });
-
-    return styles;
+    return this.config.styleSources.map( source => this.makeInclude(this.profile.src, source) );
   }
 
   makeInclude(root, target) {

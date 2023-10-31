@@ -107,16 +107,10 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         }
       );
 
-      console.log("Input Modules:", input);
-      console.log("Input Styles:", config.styleSources);
-
       let staticWatch = [];
-      let styleWatch = [];
       if (this.meta.watchMode) {
         staticWatch = staticInputs.map((e) => e.src);
         console.log("Watching Static:", staticWatch);
-
-        styleWatch = config.styleSources.map( s => api.makeInclude(s) );
       }
 
       const fvttOpts = {
@@ -128,7 +122,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
                 targets: [api.meta.profile.dest],
                 runOnce: true,
                 verbose: false,
-                force: true,
+                force: false,
               })
             : null,
           api.meta.profile.compress ? compressPlug?.() : null,
@@ -138,27 +132,25 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
             chokidar: true,
             watch: this.meta.watchMode && !api.ranOnce ? staticWatch : false,
             targets: staticInputs,
-            verbose: true,
           }),
           resolve({
             browser: true,
             jsnext: true,
             preferBuiltins: false,
           }),
-          scssPlug?.({watch: this.meta.watchMode ? styleWatch : false}),
+          scssPlug?.({fileName: api.meta.config.id + ".css", watch: this.meta.watchMode ? api.meta.config.styleSources.map(api.makeInclude) : false}),
         ],
       };
-      api.ranOnce |= true;
+
       if (this.meta.watchMode) {
         fvttOpts.watch = {
           chokidar: true,
           include: [api.makeInclude("/**/*.*js")],
           exclude: ["*.sw*", "*.bd.json"],
-          clearScreen: true,
         };
-
-        console.log("Watching Code:", ...fvttOpts.watch.include);
       };
+
+      api.ranOnce |= true;
       opts = merge(opts, fvttOpts);
       return opts
     },
