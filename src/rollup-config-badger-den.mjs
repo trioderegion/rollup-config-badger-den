@@ -15,7 +15,7 @@ import commonjs from "@rollup/plugin-commonjs";
  *
  * @returns {RollupOptions}
  */
-const defineConfig = ({denConfig = null, denPlug = bdPlug} = {}) => {
+const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack = false} = {}) => {
 
 
   if (typeof denConfig == 'string') {
@@ -40,6 +40,10 @@ const defineConfig = ({denConfig = null, denPlug = bdPlug} = {}) => {
           compress: true,
           scss: true,
         },
+        options: {
+          pack,
+          unpack,
+        }
       }),
       denConfig.cache.manifest.externals.length > 0 ? commonjs() : null,
     ],
@@ -57,7 +61,9 @@ const cliConfig = (cliArgs) => {
     throw new Error('Missing den location argument, "--config-den <bd.json path>:<build profile>"');
 
   return defineConfig({
-    denConfig: cliArgs['config-den']
+    denConfig: cliArgs['config-den'],
+    pack: 'config-pack' in cliArgs,
+    unpack: 'config-unpack' in cliArgs,
   });
 }
 

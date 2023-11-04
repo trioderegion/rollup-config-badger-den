@@ -261,8 +261,6 @@ class BDConfig {
     console.log("Entry Points:", [...esmodules, ...externals]);
     if (styles.length > 0 ) console.log("Discovered Styles:", this.config.styleSources);
     if (languages.length > 0) console.log("Discovered Languages:", languages.map( lang => `${lang.name} (${lang.path})`));
-    if (packs.length > 0) console.log("Compendia:", packs.map( p => p.path ));
-    if (packFolderEntries.length > 0) console.log("Folders:", packFolderEntries);
     if (defFiles.length > 0)
       console.log(
         "Discovered Sub-Types:",
@@ -270,6 +268,8 @@ class BDConfig {
           (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
         )
       );
+    if (packs.length > 0) console.log("Discovered Compendia:", packs.map( p => p.path ));
+    if (packFolderEntries.length > 0) console.log("Compendium Folders:", packFolderEntries.map( e => `${e.name}: ${e.packs.join(', ')}` ));
     if (this.config.static.length > 0) console.log("Static Files:", this.config.static);
 
     return { esmodules, styles, languages, packs, packFolders: packFolderEntries, documentTypes, externals };
@@ -419,9 +419,7 @@ class BDConfig {
 
     // Sanity check to make sure parent directory of the module (i.e. profile.dest) exists.
     if (!fs.existsSync(profile.dest)) {
-      throw new Error(
-        `${nameProfile} destination path does not exist: ${profile.dest}`
-      );
+      fs.mkdirSync(profile.dest, {recursive:true});
     }
 
     /* Final resting place is defined 'destination' + packageID */

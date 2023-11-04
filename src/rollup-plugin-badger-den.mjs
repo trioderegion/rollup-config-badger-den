@@ -11,7 +11,7 @@ import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_
 
 import terserPlugin from "./terser.config.mjs";
 import postScss from "./scss.config.mjs";
-import {pack as packCompendium} from './pack.mjs';
+import {pack, unpack} from './pack.mjs';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
@@ -24,9 +24,10 @@ const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
  *
  * @returns {PluginImpl}
  */
-export default ({ config, plugins = { scss: true, compress: false } }) =>
+export default ({ config, plugins = { scss: true, compress: false }, options = {pack: false, unpack: false} }) =>
   getPlugin({
     config,
+    options,
     scssPlug:
       plugins.scss === false
         ? null
@@ -53,12 +54,12 @@ export default ({ config, plugins = { scss: true, compress: false } }) =>
  * @param {BDInitOptions} [init={}]
  * @returns {PluginImpl}
  */
-function getPlugin({ config, scssPlug, compressPlug } = {}) {
+function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
   /* Some contexts do not forward these system
    * symbols, define them ourself
    */
-  const _wdir = process.env.INIT_CWD; //path.dirname(_filename);
-
+  const _wdir = path.dirname(process.env.npm_package_json)
+  
   config.build();
 
   const api = {
@@ -68,7 +69,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
     get cache() {
       return config.cache;
     },
-
+    options: options ?? {},
     ranOnce: false,
 
     socketDetected: false,
@@ -117,7 +118,7 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
         input,
         context: "globalThis",
         plugins: [
-          api.meta.profile.clean && !api.ranOnce
+          api.meta.profile.clean && !api.ranOnce && !api.options.unpack && !api.meta.profile.hmr
             ? del({
                 targets: [api.meta.profile.dest],
                 runOnce: true,
@@ -212,12 +213,19 @@ function getPlugin({ config, scssPlug, compressPlug } = {}) {
       });
 
       /* should we pack compendiums? */
-      if (api.meta.profile.pack) {
-        const packPromises = api.cache.manifest.packs.map( pack => {
-          const input = api.makeInclude(pack.path);
-          const output = path.join(api.meta.profile.dest, path.dirname(pack.path));
-          console.log(`Packing: ${pack.label} ( ${pack.path} | ${pack.type} )`);
-          return packCompendium(input, {output});
+      if (api.options.pack || api.options.unpack) {
+        const packPromises = api.cache.manifest.packs.map( async packInfo => {
+          const input = path.join(api.meta.profile.src, packInfo.path);
+          const output = path.join(api.meta.profile.dest, packInfo.path);
+          if (api.options.unpack) {
+            console.log(`Unpacking: ${packInfo.label} (${packInfo.path})`);
+            await unpack(output, input);
+          }
+          
+          if (api.options.pack) {
+            console.log(`Packing: ${packInfo.label} (${packInfo.path})`);
+            await pack(input, output);
+          }
         });
 
         await Promise.all(packPromises);
