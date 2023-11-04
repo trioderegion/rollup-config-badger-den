@@ -9,6 +9,9 @@
     "lang": "static/lang/**",
     "compendia": {
       "path": "packs/*/",
+      "type": {
+        "demo-actors": "Actor"
+      },
       "label": {
         "demo-actors": "Demo Actors"
       },

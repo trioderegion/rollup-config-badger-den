@@ -4,9 +4,29 @@ import path from "path";
 import fs from "fs";
 import deepmerge from "deepmerge";
 
+/** 
+ * A string, or string array, of "glob" paths describing files/folders.
+ *
+ * Excerpt from {@link https://github.com/mrmlnc/fast-glob/blob/master/README.md | fast-glob's} documentation, which is the library used to resolve file paths for all fields of this type:
+ *
+ * #### Basic syntax
+ *
+ *   * An asterisk (`*`) — matches everything except slashes (path separators), hidden files (names starting with `.`).
+ *   * A double star or globstar (`**`) — matches zero or more directories.
+ *   * Question mark (`?`) – matches any single character except slashes (path separators).
+ *   * Sequence (`[seq]`) — matches any character in sequence.
+ * 
+ * @example 
+`src/** /*.js` //matches all files in the `src` directory (any level of nesting) that have the `.js` extension. (space after `/**` due to formatting only, should not be included) 
+`src/*.??` //matches all files in the `src` directory (only first level of nesting) that have a two-character extension.
+`file-[01].js` //matches files: `file-0.js`, `file-1.js`.
+ *
+ * @typedef {string|string[]} globstring
+ */
+
 /**
  * @typedef {Object} CompendiaJSON
- * @prop {string|string[]} path
+ * @prop {globstring} path
  * @prop {string|object} type
  * @prop {string|object} label
  * @prop {string|object} [banner]
@@ -16,36 +36,36 @@ import deepmerge from "deepmerge";
 
 /**
  * @typedef {Object} EntryPointJSON
- * @prop {string|string[]} main
- * @prop {string|string[]} [lang]
- * @prop {CompendiaJSON} [compendia]
+ * @prop {globstring} main paths for top level module files (e.g. `init.mjs` or `[module name].mjs`)
+ * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`)
+ * @prop {globstring} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
  */
 
 /** 
  * @typedef {Object} DenProfileJSON
- * @prop {string} dest
- * @prop {boolean} [compress]
- * @prop {boolean} [sourcemaps]
- * @prop {boolean} [clean]
- * @prop {boolean} [hmr]
- * @prop {object} [entryPoints]
- * @prop {string|string[]} [static]
- * @prop {object} [flags]
+ * @prop {string} dest output directory for resulting build, relative to this bd config file
+ * @prop {boolean} [compress] compress resulting json, (m)js, and css files (extremely conservative, but do confirm proper operation)
+ * @prop {boolean} [sourcemaps] generate sourcemaps for resulting (m)js and css files.
+ * @prop {boolean} [clean] clear contents of target `dest` directory before build (does not clean on watch)
+ * @prop {boolean} [hmr] enable hot reload functionality for html, css, hbs, and json files (overrides `clean` to false)
+ * @prop {object} [entryPoints] merged with top level `entryPoints` field; see {@link DenConfigJSON.entryPoints}
+ * @prop {globstring} [static] merged with top level `static` field; see {@link DenConfigJSON.static}
+ * @prop {object} [flags] merged with top level `flags` field; see {@link DenConfigJSON.flags}
  */
 
 /**
  * @typedef {Object} DenConfigJSON
- * @prop {string} [id]
- * @prop {string} version
- * @prop {string} title
- * @prop {string} description
+ * @prop {string} [id] top level identifier for module (default taken from bd file name, as `[id].bd.json`)
+ * @prop {string} version directly added to resulting manifest
+ * @prop {string} title directly added to resulting manifeste
+ * @prop {string} description directly added to resulting manifest 
  * @prop {string} [projectUrl]
  * @prop {EntryPointJSON} entryPoints
- * @prop {string|string[]} [static]
+ * @prop {globstring} [static] file/folder paths to be directly copied to built package
  * @prop {DenProfileJSON} profile
- * @prop {object} [dependencies]
- * @prop {object|object[]} [authors]
- * @prop {object} [flags]
+ * @prop {{core:string[], modules:object, systems:object}} [dependencies]
+ * @prop {object|object[]} [authors] directly added to resulting manifest
+ * @prop {object} [flags] directy added to resulting manifest
  */
 
 
