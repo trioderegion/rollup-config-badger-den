@@ -10,23 +10,25 @@
     "compendia": {
       "path": "packs/*/",
       "label": {
-        "demo-items": "Demo Items"
+        "demo-actors": "Demo Actors"
       },
-      "banner": {
-        "sgeh-items": "static/assets/banner.webp"
-      }
-
+      "banner": "static/assets/banner.webp",
+      "folder": {
+        "label": "Demo Module Content",
+        "color": "#FF0000"
+      },
+      "system": "nova"
     }
   },
   "profile": {
     "test":{
-      "dest":"../",
+      "dest":"../built-demo-module",
       "compress":false,
       "sourcemaps": true,
       "clean": true,
       "hmr": true,
       "entryPoints": {
-        "main": "dev/buildHTML.mjs"
+        "main": "dev/utility-module.mjs"
       },
       "static": ["dev/html"]
     }
