@@ -1,6 +1,5 @@
 /* any scss files should be imported first */
-import './css/style.css';
-import './scss/style.scss';
+import './scss/style.scss'
 
 /* Using a wrapped export for externals keeps its source isolated */
 import lib from './lib/index.mjs';

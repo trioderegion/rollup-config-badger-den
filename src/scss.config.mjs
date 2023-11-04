@@ -1,6 +1,7 @@
-import pscss from "rollup-plugin-scss";
+import cssPlugin from "rollup-plugin-postcss";
 import postcssPresetEnv from "postcss-preset-env";
-import merge from 'rollup-merge-config'
+import merge from 'rollup-merge-config';
+import postcssImport from 'postcss-import';
 
 const defaultConfig = {
     inject: false, // Don't inject CSS into <HEAD>
@@ -8,6 +9,7 @@ const defaultConfig = {
     modules: true,
     plugins: [
       // Postcss plugins to use
+      postcssImport(),
       postcssPresetEnv({
         autoprefixer:{}
       }),
@@ -17,7 +19,7 @@ const defaultConfig = {
     outputStyle: 'compressed',
   }
 
-export default ( config = {}, plugin = pscss ) => {
+export default ( config = {}, plugin = cssPlugin) => {
   const finalConfig = merge(defaultConfig, config);
   return plugin(finalConfig);
 }

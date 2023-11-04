@@ -36,10 +36,6 @@ const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack 
     plugins: [
       denPlug({
         config: denConfig,
-        plugins: {
-          compress: true,
-          scss: true,
-        },
         options: {
           pack,
           unpack,

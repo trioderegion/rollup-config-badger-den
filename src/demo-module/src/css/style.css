@@ -1,0 +1,12 @@
+@import './component.css';
+
+%config.id% {
+  background:green;
+}
+
+:root {
+  --test-var: blue;
+}
+div, h1 {
+  border:none;
+}

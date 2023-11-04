@@ -10,7 +10,7 @@ import copy from "rollup-plugin-copy-watch"; //watching non-directly referenced 
 import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_modules
 
 import terserPlugin from "./terser.config.mjs";
-import postScss from "./scss.config.mjs";
+import sassPlugin from "./scss.config.mjs";
 import {pack, unpack} from './pack.mjs';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
@@ -24,22 +24,12 @@ const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
  *
  * @returns {PluginImpl}
  */
-export default ({ config, plugins = { scss: true, compress: false }, options = {pack: false, unpack: false} }) =>
+export default ({ config, plugins = { scss: sassPlugin, compress: terserPlugin }, options = {pack: false, unpack: false} }) =>
   getPlugin({
     config,
     options,
-    scssPlug:
-      plugins.scss === false
-        ? null
-        : plugins.scss === true || plugins.scss == undefined
-        ? postScss
-        : scss,
-    compressPlug:
-      plugins.compress === false
-        ? null
-        : plugins.compress === true || plugins.compress == undefined
-        ? terserPlugin
-        : compress,
+    scssPlug: plugins.scss ?? sassPlugin,
+    compressPlug: plugins.compress ?? terserPlugin,
   });
 /** 
  * @typedef {Object} BDInitOptions
@@ -113,6 +103,8 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         staticWatch = staticInputs.map((e) => e.src);
         console.log("Watching Static:", staticWatch);
       }
+      const cssFiles = api.meta.config.styleSources.filter( src => src.includes('.css') );
+      const scssFiles = api.meta.config.styleSources.filter( src => src.includes('.scss') );
 
       const fvttOpts = {
         input,
@@ -139,7 +131,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
             jsnext: true,
             preferBuiltins: false,
           }),
-          scssPlug?.({fileName: api.meta.config.id + ".css", watch: this.meta.watchMode ? api.meta.config.styleSources.map(api.makeInclude) : false}),
+          scssPlug?.({extract: api.meta.config.id + ".css", to: api.meta.profile.src}),
         ],
       };
 
