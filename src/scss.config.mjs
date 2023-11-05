@@ -16,7 +16,7 @@ const defaultConfig = {
     ],
     use: ["sass"], // Use sass / dart-sass
     sourceMap: true,
-    outputStyle: 'compressed',
+    minimize: true,
   }
 
 export default ( config = {}, plugin = cssPlugin) => {

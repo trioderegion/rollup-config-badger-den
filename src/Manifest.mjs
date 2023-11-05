@@ -25,20 +25,24 @@ import deepmerge from "deepmerge";
  */
 
 /**
+ * Definitions for module-included compendium databases. If `string` forms are used, values will apply to all discovered compendiums. If `object` fields are used, values should be `string:string` pairs keyed by the compendium's containing folder, which is used as its ID.
+ *
  * @typedef {Object} CompendiaJSON
- * @prop {globstring} path
- * @prop {string|object} type
- * @prop {string|object} label
- * @prop {string|object} [banner]
- * @prop {object} [folder]
- * @prop {string|object} [system]
+ * @prop {globstring} path Defines root folders for general, or specific database discovery
+ * @prop {string|object} type FoundryVTT Document type for discovered databases
+ * @prop {string|object} label Displayed name of compendium in FoundryVTT
+ * @prop {string|object} [banner] Asset path for compendium banner
+ * @prop {string|object} [system] associated system (if any) for compendiums
+ * @prop {{label:string, color:?string}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
  */
 
 /**
+ * Top level definition of this module's root files, or entry points. Language files should follow the country code naming convention, e.g. `en.json` or `ja.json`, for proper detection.
+ *
  * @typedef {Object} EntryPointJSON
  * @prop {globstring} main paths for top level module files (e.g. `init.mjs` or `[module name].mjs`)
- * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`)
- * @prop {globstring} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
+ * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`), which are treated as static files during bundling
+ * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
  */
 
 /** 
@@ -62,8 +66,11 @@ import deepmerge from "deepmerge";
  * @prop {string} [projectUrl]
  * @prop {EntryPointJSON} entryPoints
  * @prop {globstring} [static] file/folder paths to be directly copied to built package
- * @prop {DenProfileJSON} profile
- * @prop {{core:string[], modules:object, systems:object}} [dependencies]
+ * @prop {Object.<string, DenProfileJSON>} profile list of profile objects keyed by its name, such as 'release' or 'dev'
+ * @prop {object} [dependencies] inner string arrays are treated as `[min, verified, max]` versions
+ * @prop {string[]} [dependencies.core=[]]
+ * @prop {Object.<string,string[]>} [dependencies.modules={}] module id to version array
+ * @prop {Object.<string,string[]>} [dependencies.systems={}] system id to version array
  * @prop {object|object[]} [authors] directly added to resulting manifest
  * @prop {object} [flags] directy added to resulting manifest
  */

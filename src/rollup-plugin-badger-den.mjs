@@ -20,7 +20,7 @@ const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
  *
  * @param {Object} pluginConfig
  * @param {BDConfig} pluginConf.config
- * @param {Object<string, Boolean|RollupPlugin>} [pluginConf.plugins={scss:true, compress:false}]
+ * @param {Object<string, RollupPlugin>} [pluginConf.plugins]
  *
  * @returns {PluginImpl}
  */
@@ -103,8 +103,6 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         staticWatch = staticInputs.map((e) => e.src);
         console.log("Watching Static:", staticWatch);
       }
-      const cssFiles = api.meta.config.styleSources.filter( src => src.includes('.css') );
-      const scssFiles = api.meta.config.styleSources.filter( src => src.includes('.scss') );
 
       const fvttOpts = {
         input,
