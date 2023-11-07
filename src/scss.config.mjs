@@ -6,7 +6,7 @@ import postcssImport from 'postcss-import';
 const defaultConfig = {
     inject: false, // Don't inject CSS into <HEAD>
     extract: true,
-    modules: true,
+    modules: false,
     plugins: [
       // Postcss plugins to use
       postcssImport(),
