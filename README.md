@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://storage.googleapis.com/badgerwerks/branding/badger-den-badge-sm.webp" title="Badger Den badge">
+</p>
+
 ## What is the Badger Den?
 A configurable Rollup plugin designed for easy bundling and packaging of FoundryVTT modules. Built with flexibility in mind -- let the Badger Den make your life easier.
 
@@ -61,3 +65,9 @@ Using the above, the build would be started with `npm run develop`, where `devel
 These arguments can be added directly to the npm script entry, or passed along from the command line. Note, when passing via the command line, the arguments must be seperated by `--` from the rest of the npm script command, as seen in the example below.
 
 `npm run development -- -w --config-pack`
+
+
+<p align="center">
+  <img src="https://storage.googleapis.com/badgerwerks/branding/badgerwerks-badge-sm.webp" title="BadgerWerks badge">
+  <br><em>Badger Den is a BadgerWerks production</em>
+</p>
