@@ -204,9 +204,11 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
 
       /* should we pack compendiums? */
       if (api.options.pack || api.options.unpack) {
-        const packPromises = api.cache.manifest.packs.map( async packInfo => {
+
+        for (let packInfo of api.cache.manifest.packs) {
           const input = path.join(api.meta.profile.src, packInfo.path);
           const output = path.join(api.meta.profile.dest, packInfo.path);
+
           if (api.options.unpack) {
             console.log(`Unpacking: ${packInfo.label} (${packInfo.path})`);
             await unpack(output, input);
@@ -216,9 +218,8 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
             console.log(`Packing: ${packInfo.label} (${packInfo.path})`);
             await pack(input, output);
           }
-        });
+        }
 
-        await Promise.all(packPromises);
       }
     },
     transform(code) {
