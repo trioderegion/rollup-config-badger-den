@@ -189,8 +189,8 @@ class BDConfig {
     );
 
     /* Compiled Styles */
-    const styles = [this.config.id + '.css'];
     this.config.styleSources = glob("**/*.{scss,css}", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
+    const styles = this.config.styleSources.length > 0 ? [this.config.id + '.css'] : [];
 
     /* Discovered Languages */
     let languages = entryPoints.lang ?? [];
