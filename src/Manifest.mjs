@@ -73,6 +73,8 @@ import deepmerge from "deepmerge";
  * @prop {Object.<string,string[]>} [dependencies.systems={}] system id to version array
  * @prop {object|object[]} [authors] directly added to resulting manifest
  * @prop {object} [flags] directy added to resulting manifest
+ * @prop {boolean} [socket=false] directly added to resulting manifest -- automatically detected by presense of 'game.socket' in bundled code.
+ * @prop {boolean} [storage=false] directly added to resulting manifest as "persistentStorage" -- automatically detected by presense of 'uploadPersistent' in bundled code.
  */
 
 
