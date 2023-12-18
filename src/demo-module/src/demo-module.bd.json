@@ -43,6 +43,7 @@
       "12"
     ]
   },
+  "storage": true,
   "static": [
     "static"
   ],

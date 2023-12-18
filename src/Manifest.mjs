@@ -345,7 +345,8 @@ class BDConfig {
       version: this.config.version,
       authors: this.config.authors,
       url: this.config.projectUrl,
-      socket: this.config.socket ?? false,
+      persistentStorage: !!this.config.storage,
+      socket: !!this.config.socket,
       manifest: "",
       download: "",
       flags: this.config.flags,
@@ -362,21 +363,28 @@ class BDConfig {
     return this.#cache;
   }
 
+  modifyManifest(key, value) {
+    if (!this.#cache.manifest) {
+      throw new Error('Cannot modify unbuilt manifest. Run "build()" first.');
+    }
+
+    return this.#cache.manifest[key] = value;
+  }
+
   makeFlags(config, profile) {
     /* grab any direct flags defined */
     const global = config.flags ?? {};
     let local = profile.flags ?? {};
 
     /* grab predefined profile switches */
-    const hmr = profile.hmr ?? false;
-    if (hmr) {
+    if (!!profile.hmr) {
       const predef = {
         hotReload: {
           extensions: ["css", "html", "hbs", "json"],
-          //paths: [config.static, 
         },
       };
       local = deepmerge(local, predef);
+      profile.clean = false;
     }
 
     return deepmerge(global, local);
@@ -416,9 +424,6 @@ class BDConfig {
     const config = JSON.parse(fs.readFileSync(configPath));
     config.name = configName;
     if (!("id" in config)) {
-      //console.warn(
-      //  `...Den config missing "id" field -- using config file name "${configName}."`
-      //);
       config.id = configName;
     }
 

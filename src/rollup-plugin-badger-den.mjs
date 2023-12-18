@@ -63,6 +63,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     ranOnce: false,
 
     socketDetected: false,
+    storageDetected: false,
     manifestId: "",
 
     makeInclude: (projectLocalPath) =>
@@ -189,8 +190,11 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     async buildEnd() {
       /* were sockets detected? */
       if (api.socketDetected) {
-        api.meta.config.socket = true;
-        api.meta.build(true);
+        api.meta.modifyManifest('socket', true);
+      }
+
+      if (api.storageDetected) {
+        api.meta.modifyManifest('persistentStorage', true);
       }
 
       /* emit a configured module.json */
@@ -230,6 +234,12 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
        * manifest flag post-creation */
       if (code.includes("game.socket")) {
         api.socketDetected |= true;
+      }
+
+      /* if we can find any instance of 'uploadPersistent'
+       * set the manifest flag as well */
+      if (code.includes("uploadPersistent")) {
+        api.storageDetected |= true;
       }
 
       return { code, map: null };
