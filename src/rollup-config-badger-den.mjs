@@ -17,16 +17,21 @@ import commonjs from "@rollup/plugin-commonjs";
  */
 const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack = false} = {}) => {
 
-
   if (typeof denConfig == 'string') {
-    /* Assume this is a raw config path and load it */    
-    console.log(`Badger Den: Loading build configuration and profile from "${denConfig}"`);
-    denConfig = new loader(denConfig);
+    try {
+      denConfig = new loader(denConfig);
+    } catch (e) {
+      console.log(e);
+      console.log(`Badger Den: Config/profile identifier "${denConfig}"`);
+      return;
+    }
   }
 
   const packageType = "module"; //TODO support systems
-  console.log(`Badger Den: Build profile "${denConfig.profile.name}" loaded for ${packageType} id "${denConfig.config.id}"`);
-  console.log(`Badger Den: ${denConfig.profile.src} -> ${denConfig.profile.dest}`);
+  console.log(`Badger Den: building ${packageType} "${denConfig.config.id}"`);
+  console.log(`-- Using profile "${denConfig.profile.name}"`);
+  console.log(`-- From ${denConfig.profile.src}`)
+  console.log(`-- To   ${denConfig.profile.dest}`);
   return {
     /** @type {import('rollup').OutputOptions} */
     output: {
