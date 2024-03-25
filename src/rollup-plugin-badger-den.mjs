@@ -3,7 +3,7 @@
 /** @typedef {import('rollup').PluginImpl} PluginImpl */
 
 import path from "path";
-//import { globSync as glob } from "glob";
+import fs from "fs";
 import merge from "rollup-merge-config";
 import del from "rollup-plugin-delete"; //cleaning output directory
 import copy from "rollup-plugin-copy-watch"; //watching non-directly referenced files
@@ -193,9 +193,12 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         api.meta.modifyManifest('socket', true);
       }
 
+      /* Was module storage detected automatically? */
       if (api.storageDetected) {
         api.meta.modifyManifest('persistentStorage', true);
       }
+
+      
 
       /* emit a configured module.json */
       api.manifestId = this.emitFile({
@@ -225,6 +228,12 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         }
 
       }
+
+      /* If using module storage */
+      if (api.meta.cache.manifest.persistentStorage) {
+        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage'), {recursive: true}) 
+      }
+
     },
     transform(code) {
       /* replace any usages of %global% with derived value */
