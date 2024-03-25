@@ -3,7 +3,7 @@
 /** @typedef {import('rollup').PluginImpl} PluginImpl */
 
 import path from "path";
-//import { globSync as glob } from "glob";
+import fs from "fs";
 import merge from "rollup-merge-config";
 import del from "rollup-plugin-delete"; //cleaning output directory
 import copy from "rollup-plugin-copy-watch"; //watching non-directly referenced files
@@ -89,7 +89,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       }, {});
 
       const staticLangs = api.cache.manifest.languages.map((lang) => lang.path);
-      const staticInputs = [...api.meta.config.static, ...staticLangs].flatMap(
+      const staticInputs = [...staticLangs, ...api.meta.config.static].flatMap(
         (entry) => {
           const mapping = {
             src: api.makeInclude(entry),
@@ -99,17 +99,24 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         }
       );
 
-      let staticWatch = [];
+      const copyOpts = {
+        hook: 'buildEnd',
+        verbose: true,
+        chokidar:true,
+        copySync: true,
+        targets: staticInputs,
+      }
+
       if (this.meta.watchMode) {
-        staticWatch = staticInputs.map((e) => e.src);
-        console.log("Watching Static:", staticWatch);
+        copyOpts.watch = staticInputs.map((e) => e.src);
+        console.log("Watching Static:", copyOpts.watch);
       }
 
       const fvttOpts = {
         input,
         context: "globalThis",
         plugins: [
-          api.meta.profile.clean && !api.ranOnce && !api.options.unpack && !api.meta.profile.hmr
+          (api.meta.profile.clean && !api.ranOnce && !api.options.unpack && !api.meta.profile.hmr)
             ? del({
                 targets: [api.meta.profile.dest],
                 runOnce: true,
@@ -117,24 +124,19 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
                 force: false,
               })
             : null,
+          scssPlug?.({extract: api.meta.config.id + ".css", to: api.meta.profile.src}),
           api.meta.profile.compress ? compressPlug?.() : null,
-          copy({
-            hook: 'buildEnd',
-            copySync:true,
-            chokidar: true,
-            watch: this.meta.watchMode && !api.ranOnce ? staticWatch : false,
-            targets: staticInputs,
-          }),
+          !api.ranOnce ? copy(copyOpts) : null,
           resolve({
             browser: true,
             jsnext: true,
             preferBuiltins: false,
           }),
-          scssPlug?.({extract: api.meta.config.id + ".css", to: api.meta.profile.src}),
         ],
       };
-
+      
       if (this.meta.watchMode) {
+        console.log('current watch opts:', opts.watch)
         fvttOpts.watch = {
           chokidar: true,
           include: [api.makeInclude("/**/*.*js")],
@@ -142,7 +144,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         };
       };
 
-      api.ranOnce |= true;
+      api.ranOnce = true;
       opts = merge(opts, fvttOpts);
       return opts
     },
@@ -193,6 +195,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         api.meta.modifyManifest('socket', true);
       }
 
+      /* Was module storage detected automatically? */
       if (api.storageDetected) {
         api.meta.modifyManifest('persistentStorage', true);
       }
@@ -225,6 +228,12 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         }
 
       }
+
+      /* If using module storage */
+      if (api.meta.cache.manifest.persistentStorage) {
+        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage'), {recursive: true}) 
+      }
+
     },
     transform(code) {
       /* replace any usages of %global% with derived value */
