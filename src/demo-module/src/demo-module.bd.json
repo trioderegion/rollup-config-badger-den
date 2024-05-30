@@ -6,6 +6,7 @@
   "entryPoints": {
     "main": "index.mjs",
     "lang": "static/lang/**",
+    "templates": "templates/*",
     "external": "lib/tiny.mjs",
     "compendia": {
       "path": "packs/*/",

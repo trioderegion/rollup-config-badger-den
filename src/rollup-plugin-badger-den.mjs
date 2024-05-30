@@ -98,6 +98,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
 
       const langPaths = api.cache.manifest.languages.map((lang) => lang.path);
       const staticLangs = langPaths.map(makeStaticEntry)
+      const staticTemplates = api.cache.manifest.templates.map(makeStaticEntry);
       const staticInputs = api.meta.config.static.map(makeStaticEntry);
 
       const copyOpts = {
@@ -148,6 +149,15 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
             ...copyOpts,
             targets: staticLangs,
             watch: this.meta.watchMode ? staticLangs.map( e => e.src ) : false,
+          }))
+      }
+
+      if (staticTemplates.length > 0) {
+        subplugs.push(
+          copy({
+            ...copyOpts,
+            targets: staticTemplates,
+            watch: this.meta.watchMode ? staticTemplates.map( e => e.src ) : false,
           }))
       }
 
@@ -217,9 +227,10 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         })
         console.log("Watching Styles:", styleWatch);
         console.log("Watching Languages:", api.cache.manifest.languages.map( l => l.path ));
+        console.log("Watching Templates:", api.cache.manifest.templates);
       }
     },
-    writeBundle() {
+    buildEnd() {
       /* were sockets detected? */
       if (api.socketDetected) {
         api.meta.modifyManifest('socket', true);
@@ -238,7 +249,8 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           ? JSON.stringify(api.cache.manifest)
           : JSON.stringify(api.cache.manifest, null, 2),
       });
-
+    },
+    closeBundle() {
       /* If using module storage */
       if (api.meta.cache.manifest.persistentStorage && !fs.existsSync(path.join(api.meta.profile.dest, 'storage'))) {
         fs.mkdirSync(path.join(api.meta.profile.dest, 'storage')) 

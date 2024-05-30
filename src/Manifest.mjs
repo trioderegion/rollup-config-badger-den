@@ -191,6 +191,14 @@ class BDConfig {
         .map(posixPath)
     );
 
+    /* Templates */
+    let templates = entryPoints.templates ?? [];
+    if (typeof templates == "string") templates = [templates];
+    templates = templates.flatMap((entry) =>
+      glob(entry, { cwd: profile.src, onlyFiles: true })
+        .map(posixPath)
+    );
+
     /* Compiled Styles */
     this.config.styleSources = glob("**/*.{scss,css}", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
     const styles = this.config.styleSources.length > 0 ? [this.config.id + '.css'] : [];
@@ -291,6 +299,7 @@ class BDConfig {
     console.log("Entry Points:", [...esmodules, ...externals]);
     if (styles.length > 0 ) console.log("Discovered Styles:", this.config.styleSources);
     if (languages.length > 0) console.log("Discovered Languages:", languages.map( lang => `${lang.name} (${lang.path})`));
+    if (templates.length > 0) console.log("Discovered Templates:", templates);
     if (defFiles.length > 0)
       console.log(
         "Discovered Sub-Types:",
@@ -302,7 +311,7 @@ class BDConfig {
     if (packFolderEntries.length > 0) console.log("Compendium Folders:", packFolderEntries.map( e => `${e.name}: ${e.packs.join(', ')}` ));
     if (this.config.static.length > 0) console.log("Static Files:", this.config.static);
 
-    return { esmodules, styles, languages, packs, packFolders: packFolderEntries, documentTypes, externals };
+    return { esmodules, styles, languages, templates, packs, packFolders: packFolderEntries, documentTypes, externals };
   };
 
   compat = ([min, curr, max]) => {
