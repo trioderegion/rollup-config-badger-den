@@ -28,6 +28,7 @@ import deepmerge from "deepmerge";
  * Definitions for module-included compendium databases. If `string` forms are used, values will apply to all discovered compendiums. If `object` fields are used, values should be `string:string` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
+ * console.log('profile', this.meta.profile);
  * @prop {globstring} path Defines root folders for general, or specific database discovery
  * @prop {string|object} type FoundryVTT Document type for discovered databases
  * @prop {string|object} label Displayed name of compendium in FoundryVTT
@@ -386,7 +387,6 @@ class BDConfig {
         },
       };
       local = deepmerge(local, predef);
-      profile.clean = false;
     }
 
     return deepmerge(global, local);

@@ -11,7 +11,6 @@ import resolve from "@rollup/plugin-node-resolve"; //resolves imports from node_
 
 import terserPlugin from "./terser.config.mjs";
 import sassPlugin from "./scss.config.mjs";
-import {pack, unpack} from './pack.mjs';
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
@@ -50,14 +49,15 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
    */
   const _wdir = path.dirname(process.env.npm_package_json)
   
-  config.build();
-
   const api = {
     get meta() {
       return config;
     },
     get cache() {
       return config.cache;
+    },
+    get shouldClean() {
+      return this.meta.profile.clean && !this.ranOnce
     },
     options: options ?? {},
     ranOnce: false,
@@ -88,55 +88,83 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         return acc;
       }, {});
 
-      const staticLangs = api.cache.manifest.languages.map((lang) => lang.path);
-      const staticInputs = [...staticLangs, ...api.meta.config.static].flatMap(
-        (entry) => {
+      const makeStaticEntry = (entry) => {
           const mapping = {
             src: api.makeInclude(entry),
             dest: path.join(api.meta.profile.dest, path.dirname(entry)),
           };
           return mapping;
-        }
-      );
+        };
+
+      const langPaths = api.cache.manifest.languages.map((lang) => lang.path);
+      const staticLangs = langPaths.map(makeStaticEntry)
+      const staticInputs = api.meta.config.static.map(makeStaticEntry);
 
       const copyOpts = {
-        hook: 'buildEnd',
-        verbose: true,
+        hook: 'generateBundle',
+        verbose: false,
         chokidar:true,
-        copySync: true,
-        targets: staticInputs,
+        runOnce: true,
+        copySync: false,
       }
 
-      if (this.meta.watchMode) {
-        copyOpts.watch = staticInputs.map((e) => e.src);
-        console.log("Watching Static:", copyOpts.watch);
+      const subplugs = [];
+
+      /* Can we safely clean the output directory if requested? */
+      //const dbOp = opts.plugins.find(p => p.name === 'rollup-plugin-badger-foundry');
+      if (api.shouldClean) {
+        subplugs.push(
+          del({
+            hook: 'buildEnd',
+            targets: [api.meta.profile.dest],
+            runOnce: true,
+            verbose: false,
+            force: false,
+          }))
       }
+
+      if (scssPlug) {
+        subplugs.push(
+          scssPlug({
+            extract: api.meta.config.id + ".css",
+            to: api.meta.profile.src
+          }))
+      }
+
+      if (api.meta.profile.compress && compressPlug) subplugs.push(compressPlug())
+
+      if (staticInputs.length > 0) {
+        subplugs.push(
+          copy({
+            ...copyOpts,
+            targets: staticInputs,
+            watch: false,
+          }))
+      }
+
+      if (staticLangs.length > 0) {
+        subplugs.push(
+          copy({
+            ...copyOpts,
+            targets: staticLangs,
+            watch: this.meta.watchMode ? staticLangs.map( e => e.src ) : false,
+          }))
+      }
+
+      /* Resolve node module paths */
+      subplugs.push(
+        resolve({
+          browser: true,
+          jsnext: true,
+          preferBuiltins: false,
+        }));
 
       const fvttOpts = {
         input,
         context: "globalThis",
-        plugins: [
-          (api.meta.profile.clean && !api.ranOnce && !api.options.unpack && !api.meta.profile.hmr)
-            ? del({
-                targets: [api.meta.profile.dest],
-                runOnce: true,
-                verbose: false,
-                force: false,
-              })
-            : null,
-          scssPlug?.({extract: api.meta.config.id + ".css", to: api.meta.profile.src}),
-          api.meta.profile.compress ? compressPlug?.() : null,
-          !api.ranOnce ? copy(copyOpts) : null,
-          resolve({
-            browser: true,
-            jsnext: true,
-            preferBuiltins: false,
-          }),
-        ],
       };
       
       if (this.meta.watchMode) {
-        console.log('current watch opts:', opts.watch)
         fvttOpts.watch = {
           chokidar: true,
           include: [api.makeInclude("/**/*.*js")],
@@ -145,6 +173,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       };
 
       api.ranOnce = true;
+      opts.plugins.push(...subplugs);
       opts = merge(opts, fvttOpts);
       return opts
     },
@@ -187,9 +216,10 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           return file;
         })
         console.log("Watching Styles:", styleWatch);
+        console.log("Watching Languages:", api.cache.manifest.languages.map( l => l.path ));
       }
     },
-    async buildEnd() {
+    writeBundle() {
       /* were sockets detected? */
       if (api.socketDetected) {
         api.meta.modifyManifest('socket', true);
@@ -209,29 +239,9 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           : JSON.stringify(api.cache.manifest, null, 2),
       });
 
-      /* should we pack compendiums? */
-      if (api.options.pack || api.options.unpack) {
-
-        for (let packInfo of api.cache.manifest.packs) {
-          const input = path.join(api.meta.profile.src, packInfo.path);
-          const output = path.join(api.meta.profile.dest, packInfo.path);
-
-          if (api.options.unpack) {
-            console.log(`Unpacking: ${packInfo.label} (${packInfo.path})`);
-            await unpack(output, input);
-          }
-          
-          if (api.options.pack) {
-            console.log(`Packing: ${packInfo.label} (${packInfo.path})`);
-            await pack(input, output);
-          }
-        }
-
-      }
-
       /* If using module storage */
-      if (api.meta.cache.manifest.persistentStorage) {
-        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage'), {recursive: true}) 
+      if (api.meta.cache.manifest.persistentStorage && !fs.existsSync(path.join(api.meta.profile.dest, 'storage'))) {
+        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage')) 
       }
 
     },

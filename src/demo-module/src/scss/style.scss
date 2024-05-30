@@ -5,7 +5,7 @@
   --test-var: blue;
 }
 div, h1 {
-  border:none;
+  border:1px;
 }
 p {
   @include reset.list();

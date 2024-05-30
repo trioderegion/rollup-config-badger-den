@@ -1,5 +1,6 @@
 {
   "my-module": {
-    "todo": "lang file management"
+    "todo": "lang file management",
+    "another": "lang file management"
   }
 }

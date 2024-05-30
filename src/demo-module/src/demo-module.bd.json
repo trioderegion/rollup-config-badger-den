@@ -5,8 +5,8 @@
   "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
   "entryPoints": {
     "main": "index.mjs",
-    "external": "lib/tiny.mjs",
     "lang": "static/lang/**",
+    "external": "lib/tiny.mjs",
     "compendia": {
       "path": "packs/*/",
       "type": {

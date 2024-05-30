@@ -1,6 +1,9 @@
 import loader from "./Manifest.mjs";
 import bdPlug from "./rollup-plugin-badger-den.mjs";
 import commonjs from "@rollup/plugin-commonjs";
+import denDB from "./rollup-plugin-badger-foundry.mjs";
+import fs from "fs";
+import path from "path";
 
 /** @typedef {import('./Manifest.mjs').BDConfig} BDConfig */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -29,25 +32,34 @@ const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack 
 
   const packageType = "module"; //TODO support systems
   console.log(`Badger Den: building ${packageType} "${denConfig.config.id}"`);
-  console.log(`-- Using profile "${denConfig.profile.name}"`);
-  console.log(`-- From ${denConfig.profile.src}`)
-  console.log(`-- To   ${denConfig.profile.dest}`);
+  console.log(`-- Profile: "${denConfig.profile.name}"`);
+  console.log(`-- From   : ${denConfig.profile.src}`)
+  console.log(`-- To     : ${denConfig.profile.dest}`);
+
+  denConfig.build();
+  if (!fs.existsSync(denConfig.profile.dest)) fs.mkdirSync(denConfig.profile.dest);
+
+  const noBundle = [unpack, pack].includes('only');
+  if (noBundle) {
+    return {
+      plugins: [denDB({config: denConfig, pack, unpack})]
+    }
+  }
+
   return {
     /** @type {import('rollup').OutputOptions} */
     output: {
       dir: denConfig.profile.dest,
     },
+    watch: {
+      clearScreen: false,
+    },
     /** @type {import('rollup').InputPluginOptions} */
     plugins: [
-      denPlug({
-        config: denConfig,
-        options: {
-          pack,
-          unpack,
-        }
-      }),
-      denConfig.cache.manifest.externals.length > 0 ? commonjs() : null,
-    ],
+      commonjs(),
+      denPlug({config: denConfig}),
+      denDB({config: denConfig, pack, unpack})
+    ]
   }
 };
 
@@ -63,8 +75,8 @@ const cliConfig = (cliArgs) => {
 
   return defineConfig({
     denConfig: cliArgs['config-den'],
-    pack: 'config-pack' in cliArgs,
-    unpack: 'config-unpack' in cliArgs,
+    pack: cliArgs['config-pack'] ?? false,
+    unpack: cliArgs['config-unpack'] ?? false,
   });
 }
 

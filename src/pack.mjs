@@ -21,4 +21,7 @@ export const unpack = async (folder, output) => {
   await extractPack(folder, output, {yaml:true})
 }
 
-
+export default {
+  pack,
+  unpack,
+}

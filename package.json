@@ -14,10 +14,15 @@
   "scripts": {
     "build": "rollup --config",
     "release": "npm run build && np",
-    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-css:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-scss:test",
-    "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test && rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test",
+    "src-pack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
+    "src-pack-unpack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack --config-pack",
+    "src-unpack-watch": "rollup --watch --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack",
+    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-css:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-scss:test",
+    "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test && rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
     "docs": "jsdoc --configure jsdoc.json --verbose",
-    "vars": "node -p process.env"
+    "vars": "node -p process.env",
+    "test-comp": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
+    "test-extr": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack"
   },
   "engines": {
     "node": ">=14.0.0"
