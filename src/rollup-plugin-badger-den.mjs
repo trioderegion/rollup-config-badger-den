@@ -61,6 +61,8 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     },
     options: options ?? {},
     ranOnce: false,
+    watchEcho: true,
+    loadEcho: false,
 
     socketDetected: false,
     storageDetected: false,
@@ -148,7 +150,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           copy({
             ...copyOpts,
             targets: staticLangs,
-            watch: this.meta.watchMode ? staticLangs.map( e => e.src ) : false,
+            //watch: this.meta.watchMode ? staticLangs.map( e => e.src ) : false,
           }))
       }
 
@@ -157,7 +159,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           copy({
             ...copyOpts,
             targets: staticTemplates,
-            watch: this.meta.watchMode ? staticTemplates.map( e => e.src ) : false,
+            //watch: this.meta.watchMode ? staticTemplates.map( e => e.src ) : false,
           }))
       }
 
@@ -218,16 +220,24 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       const merged = merge(opts, output);
       return merged;
     },
-    buildStart(){
+    load(id){
+      if (api.loadEcho) console.log('Loading:', id);
       if (this.meta.watchMode) {
-        const styleWatch = config.styleSources.map( s => {
-          const file = api.makeInclude(s);
-          this.addWatchFile(file)
+        const watch = (path) => {
+          const file = api.makeInclude(path);
+          this.addWatchFile(file);
           return file;
-        })
-        console.log("Watching Styles:", styleWatch);
-        console.log("Watching Languages:", api.cache.manifest.languages.map( l => l.path ));
-        console.log("Watching Templates:", api.cache.manifest.templates);
+        };
+
+        const styleWatch = config.styleSources.map(watch);
+        const langWatch = api.cache.manifest.languages.map( l => l.path ).map(watch);
+        const templateWatch = api.cache.manifest.templates.map(watch);
+        if (api.watchEcho) {
+          console.log("Watching Styles:", styleWatch);
+          console.log("Watching Languages:", langWatch);
+          console.log("Watching Templates:", templateWatch);
+          api.watchEcho = false;
+        }
       }
     },
     buildEnd() {

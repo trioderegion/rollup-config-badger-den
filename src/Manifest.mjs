@@ -39,10 +39,12 @@ import deepmerge from "deepmerge";
 
 /**
  * Top level definition of this module's root files, or entry points. Language files should follow the country code naming convention, e.g. `en.json` or `ja.json`, for proper detection.
+ * All files/globstrings listed in this section, _except_ for compendia, will be watched for changes and trigger rebundles. Compendium entries are unpacked (if requested) prior to any cleaning operation of the output folder, and packed _after_ said cleaning operation.
  *
  * @typedef {Object} EntryPointJSON
  * @prop {globstring} main paths for top level module files (e.g. `init.mjs` or `[module name].mjs`)
- * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`), which are treated as static files during bundling
+ * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`)
+ * @prop {globstring} [templates] paths for handlebars template files (.hbs or .html)
  * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
  */
 
@@ -66,7 +68,7 @@ import deepmerge from "deepmerge";
  * @prop {string} description directly added to resulting manifest 
  * @prop {string} [projectUrl]
  * @prop {EntryPointJSON} entryPoints
- * @prop {globstring} [static] file/folder paths to be directly copied to built package
+ * @prop {globstring} [static] file/folder paths to be directly copied to built package _once_ upon initial bundle only (not re-copied on watch trigger)
  * @prop {Object.<string, DenProfileJSON>} profile list of profile objects keyed by its name, such as 'release' or 'dev'
  * @prop {object} [dependencies] inner string arrays are treated as `[min, verified, max]` versions
  * @prop {string[]} [dependencies.core=[]]
