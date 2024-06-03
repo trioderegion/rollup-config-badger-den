@@ -58,13 +58,13 @@ Using the above, the build would be started with `npm run develop`, where `devel
 
 `-w | --watch` Enable Rollup's watch mode, recompiling on changes.
 
-`--config-pack` Compile LevelDB compendiums during build.
+`--config-pack [only]` Compile LevelDB compendiums during build. If `only` is used (e.g. `--config-pack only`), this bundling operation will _only_ pack the defined compendia paths, rather than both packing compendia and bundling module code. Note, due to optional `only` argument, `--config-pack/unpack` must be the last configuration argument provided to Rollup.
 
-`--config-unpack` Extract LevelDB binary compendiums to human-readable source files.
+`--config-unpack [only]` Extract LevelDB binary compendiums to human-readable source files. See `--config-pack` for `only` usage notes.
 
 These arguments can be added directly to the npm script entry, or passed along from the command line. Note, when passing via the command line, the arguments must be seperated by `--` from the rest of the npm script command, as seen in the example below.
 
-`npm run development -- -w --config-pack`
+`npm run develop -- -w --config-pack`
 
 
 <p align="center">
