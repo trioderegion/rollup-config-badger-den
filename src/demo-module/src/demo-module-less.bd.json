@@ -1,0 +1,55 @@
+{
+  "version": "1.0.0",
+  "title": "Badger Den Demo Module",
+  "description": "Demonstration module built from the Badger Den",
+  "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
+  "entryPoints": {
+    "main": "index-less.mjs",
+    "external": "lib/tiny.mjs",
+    "lang": "static/lang/**",
+    "compendia": {
+      "path": "packs/*/",
+      "type": {
+        "demo-actors": "Actor"
+      },
+      "label": {
+        "demo-actors": "Demo Actors"
+      },
+      "banner": "static/assets/banner.webp",
+      "folder": {
+        "label": "Demo Module Content",
+        "color": "#FF0000"
+      },
+      "system": "nova"
+    }
+  },
+  "profile": {
+    "test":{
+      "dest":"../built-demo-module",
+      "compress":false,
+      "sourcemaps": true,
+      "clean": true,
+      "hmr": true,
+      "entryPoints": {
+        "main": "dev/utility-module.mjs"
+      },
+      "static": ["dev/html"]
+    }
+  },
+  "dependencies": {
+    "core": [
+      "10",
+      "11.299",
+      "12"
+    ]
+  },
+  "static": [
+    "static"
+  ],
+  "authors": [
+    {
+      "name": "trioderegion",
+      "url": "https://www.github.com/trioderegion"
+    }
+  ]
+}

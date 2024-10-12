@@ -17,7 +17,7 @@
     "src-pack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
     "src-pack-unpack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack --config-pack",
     "src-unpack-watch": "rollup --watch --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack",
-    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-css:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-scss:test",
+    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-css:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-scss:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-less:test",
     "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test && rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
     "docs": "jsdoc --configure jsdoc.json --verbose",
     "vars": "node -p process.env",
@@ -41,8 +41,7 @@
     "rollup-plugin-copy-watch": "^0.0.1",
     "rollup-plugin-delete": "^2.0.0",
     "rollup-plugin-postcss": "^4.0.2",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "sass": ">=1.77"
+    "rollup-plugin-sourcemaps": "^0.6.3"
   },
   "devDependencies": {
     "@shon/tiny": "^2.3.0",
@@ -79,5 +78,9 @@
   "funding": {
     "type": "ko-fi",
     "url": "https://ko-fi.com/badgerwerks"
+  },
+  "optionalDependencies": {
+    "less": "^4.2.0",
+    "sass": ">=1.77"
   }
 }

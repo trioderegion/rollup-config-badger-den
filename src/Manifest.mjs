@@ -202,7 +202,7 @@ class BDConfig {
     );
 
     /* Compiled Styles */
-    this.config.styleSources = glob("**/*.{scss,css}", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
+    this.config.styleSources = glob("**/*.{scss,less,css}", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
     const styles = this.config.styleSources.length > 0 ? [this.config.id + '.css'] : [];
 
     /* Discovered Languages */
@@ -368,7 +368,7 @@ class BDConfig {
 
     if (this.profile.premium) {
       delete this.#cache.manifest.download
-      this.#cache.manifest.manifest = `https://foundryvtt.s3.us-west-2.amazonaws.com/modules/${this.config.id}/module.json`;
+      this.#cache.manifest.manifest = `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
       this.#cache.manifest.protected = true;
     }
 

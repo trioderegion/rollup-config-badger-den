@@ -14,7 +14,7 @@ const defaultConfig = {
         autoprefixer:{}
       }),
     ],
-    use: ["sass"], // Use sass / dart-sass
+    use: ["sass", "less"], // Use sass / dart-sass and less
     sourceMap: true,
     minimize: true,
   }

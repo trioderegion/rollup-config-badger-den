@@ -263,7 +263,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     closeBundle() {
       /* If using module storage */
       if (api.meta.cache.manifest.persistentStorage && !fs.existsSync(path.join(api.meta.profile.dest, 'storage'))) {
-        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage')) 
+        fs.mkdirSync(path.join(api.meta.profile.dest, 'storage'), {recursive: true}) 
       }
 
     },
