@@ -17,8 +17,9 @@
     "src-pack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
     "src-pack-unpack": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack --config-pack",
     "src-unpack-watch": "rollup --watch --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack",
-    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-css:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-scss:test && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module-less:test",
-    "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test && rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
+    "test-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:css && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:scss && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:less && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:altered",
+    "altered-src": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:altered",
+    "test": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test && rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c dist/index.mjs --config-den src/demo-module/src/demo-module:altered",
     "docs": "jsdoc --configure jsdoc.json --verbose",
     "vars": "node -p process.env",
     "test-comp": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
@@ -28,18 +29,18 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@foundryvtt/foundryvtt-cli": "^1.0.2",
-    "@rollup/plugin-commonjs": "^25.0.8",
-    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@foundryvtt/foundryvtt-cli": "^1.0.3",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^15.3.0",
     "@rollup/plugin-terser": "^0.4.4",
     "deepmerge": "^4.3.1",
-    "glob": "^10.4.1",
+    "glob": "^11.0.0",
     "locale-codes": "^1.3.1",
     "postcss-import": "^16.1.0",
-    "postcss-preset-env": "^9.5.14",
+    "postcss-preset-env": "^10.1.0",
     "rollup-merge-config": "^0.0.12",
     "rollup-plugin-copy-watch": "^0.0.1",
-    "rollup-plugin-delete": "^2.0.0",
+    "rollup-plugin-delete": "^2.1.0",
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-sourcemaps": "^0.6.3"
   },
@@ -47,8 +48,8 @@
     "@shon/tiny": "^2.3.0",
     "@yelo/rollup-node-external": "^1.0.1",
     "clean-jsdoc-theme": "^4.3.0",
-    "np": "^10.0.5",
-    "rollup-plugin-node-externals": "^7.1.2"
+    "np": "^10.0.7",
+    "rollup-plugin-node-externals": "^7.1.3"
   },
   "peerDependencies": {
     "rollup": ">=3.23"
@@ -81,6 +82,6 @@
   },
   "optionalDependencies": {
     "less": "^4.2.0",
-    "sass": ">=1.77"
+    "sass": ">=1.81"
   }
 }

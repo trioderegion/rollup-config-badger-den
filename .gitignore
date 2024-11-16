@@ -2,7 +2,7 @@ node_modules/
 *.sw*
 
 # Do not version built demo module
-src/demo-module/built-demo-module/
+src/demo-module/built-*
 
 # Do not version distribution code
 dist/

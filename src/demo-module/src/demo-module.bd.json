@@ -4,7 +4,6 @@
   "description": "Demonstration module built from the Badger Den",
   "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
   "entryPoints": {
-    "main": "index.mjs",
     "lang": "static/lang/**",
     "templates": "templates/*",
     "external": "lib/tiny.mjs",
@@ -24,17 +23,55 @@
       "system": "nova"
     }
   },
+  "dest":"../built-demo-module",
   "profile": {
+    "altered": {
+      "id": "altered-demo",
+      "version": "2.0.0",
+      "dest": "../built-altered-demo",
+      "entryPoints": {
+        "main": "index.mjs"
+      },
+      "compress":true,
+      "sourcemaps": true,
+      "clean": true,
+      "hmr": true,
+      "flags": {
+        "dnd5e": {
+          "test": true
+        }
+      }
+    },
     "test":{
-      "dest":"../built-demo-module",
+      "entryPoints": {
+        "main": ["index.mjs", "dev/utility-module.mjs"]
+      },
       "compress":false,
       "sourcemaps": true,
       "clean": true,
       "hmr": true,
-      "entryPoints": {
-        "main": "dev/utility-module.mjs"
-      },
       "static": ["dev/html"]
+    },
+    "css": {
+      "clean": true,
+      "id": "demo-module-css",
+      "entryPoints": {
+        "main": "index-css.mjs"
+      }
+    },
+    "scss": {
+      "clean": true,
+      "id": "demo-module-scss",
+      "entryPoints": {
+        "main": "index-scss.mjs"
+      }
+    },
+    "less": {
+      "clean": true,
+      "id": "demo-module-less",
+      "entryPoints": {
+        "main": "index-less.mjs"
+      }
     }
   },
   "dependencies": {

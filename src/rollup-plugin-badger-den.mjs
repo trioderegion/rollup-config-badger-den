@@ -84,7 +84,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     options(opts) {
       const input = [
         ...api.cache.manifest.esmodules,
-        ...api.cache.manifest.externals,
+        ...api.cache.externals,
       ].reduce((acc, curr) => {
         acc[curr] = path.join(api.meta.profile.src, curr);
         return acc;
@@ -98,10 +98,11 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           return mapping;
         };
 
-      const langPaths = api.cache.manifest.languages.map((lang) => lang.path);
-      const staticLangs = langPaths.map(makeStaticEntry)
-      const staticTemplates = api.cache.manifest.templates.map(makeStaticEntry);
-      const staticInputs = api.meta.config.static.map(makeStaticEntry);
+      const staticLangs = api.cache.manifest.languages
+        .map(lang => makeStaticEntry(lang.path));
+
+      const staticTemplates = api.cache.templates.map(makeStaticEntry);
+      const staticInputs = api.cache.statics.map(makeStaticEntry);
 
       const copyOpts = {
         hook: 'generateBundle',
@@ -150,7 +151,6 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           copy({
             ...copyOpts,
             targets: staticLangs,
-            //watch: this.meta.watchMode ? staticLangs.map( e => e.src ) : false,
           }))
       }
 
@@ -159,7 +159,6 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           copy({
             ...copyOpts,
             targets: staticTemplates,
-            //watch: this.meta.watchMode ? staticTemplates.map( e => e.src ) : false,
           }))
       }
 
@@ -231,7 +230,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
 
         const styleWatch = config.styleSources.map(watch);
         const langWatch = api.cache.manifest.languages.map( l => l.path ).map(watch);
-        const templateWatch = api.cache.manifest.templates.map(watch);
+        const templateWatch = api.cache.templates.map(watch);
         if (api.watchEcho) {
           console.log("Watching Styles:", styleWatch);
           console.log("Watching Languages:", langWatch);

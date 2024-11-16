@@ -28,7 +28,6 @@ import deepmerge from "deepmerge";
  * Definitions for module-included compendium databases. If `string` forms are used, values will apply to all discovered compendiums. If `object` fields are used, values should be `string:string` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
- * console.log('profile', this.meta.profile);
  * @prop {globstring} path Defines root folders for general, or specific database discovery
  * @prop {string|object} type FoundryVTT Document type for discovered databases
  * @prop {string|object} label Displayed name of compendium in FoundryVTT
@@ -50,12 +49,14 @@ import deepmerge from "deepmerge";
 
 /** 
  * @typedef {Object} DenProfileJSON
- * @prop {string} dest output directory for resulting build, relative to this bd config file
+ * @prop {string} [dest] output directory for resulting build, relative to this bd config file (overrides {@link DenConfigJSON.dest})
+ * @prop {string} [id] top level identifier for module (overrides {@link DenConfigJSON.id})
+ * @prop {string} [version] directly added to resulting manifest (overrides {@link DenConfigJSON.version})
  * @prop {boolean} [compress] compress resulting json, (m)js, and css files (extremely conservative, but do confirm proper operation)
  * @prop {boolean} [sourcemaps] generate sourcemaps for resulting (m)js and css files.
  * @prop {boolean} [clean] clear contents of target `dest` directory before build (does not clean on watch)
  * @prop {boolean} [hmr] enable hot reload functionality for html, css, hbs, and json files (overrides `clean` to false)
- * @prop {object} [entryPoints] merged with top level `entryPoints` field; see {@link DenConfigJSON.entryPoints}
+ * @prop {EntryPointJSON} [entryPoints] merged with top level `entryPoints` field; see {@link DenConfigJSON.entryPoints}
  * @prop {globstring} [static] merged with top level `static` field; see {@link DenConfigJSON.static}
  * @prop {object} [flags] merged with top level `flags` field; see {@link DenConfigJSON.flags}
  */
@@ -68,6 +69,7 @@ import deepmerge from "deepmerge";
  * @prop {string} description directly added to resulting manifest 
  * @prop {string} [projectUrl]
  * @prop {EntryPointJSON} entryPoints
+ * @prop {string} dest output directory for resulting build, relative to this bd config file
  * @prop {globstring} [static] file/folder paths to be directly copied to built package _once_ upon initial bundle only (not re-copied on watch trigger)
  * @prop {Object.<string, DenProfileJSON>} profile list of profile objects keyed by its name, such as 'release' or 'dev'
  * @prop {object} [dependencies] inner string arrays are treated as `[min, verified, max]` versions
@@ -139,6 +141,8 @@ class BDConfig {
     const { profile, config } = this.load(profileURI);
     this.config = config;
     this.profile = profile;
+    this.templates = [];
+    this.externals = [];
     this.namespace = namespace;
   }
 
@@ -171,7 +175,7 @@ class BDConfig {
 
     const globs = config.static.concat(profile.static).map( path => posixPath(path) );
 
-    const staticFiles = glob(globs, { cwd: profile.src, onlyFiles: true, unique: true, matchBase: true, posix: true, ignore: ['*.scss', '*.sw*', '*.tmp'] });
+    const staticFiles = glob(globs, { cwd: profile.src, onlyFiles: true, unique: true, matchBase: true, posix: true, ignore: ['*.scss', '*.sw*', '*.tmp', '*.orig'] });
     return staticFiles;
   }
 
@@ -298,6 +302,8 @@ class BDConfig {
       packFolderEntries.push({name: folder.label, color: folder.color ?? '#000000', packs: packs.map( p => p.name )});
     }
 
+    const statics = this.enumerateStatics(this.config, this.profile);
+
     console.log("Entry Points:", [...esmodules, ...externals]);
     if (styles.length > 0 ) console.log("Discovered Styles:", this.config.styleSources);
     if (languages.length > 0) console.log("Discovered Languages:", languages.map( lang => `${lang.name} (${lang.path})`));
@@ -311,9 +317,9 @@ class BDConfig {
       );
     if (packs.length > 0) console.log("Discovered Compendia:", packs.map( p => p.path ));
     if (packFolderEntries.length > 0) console.log("Compendium Folders:", packFolderEntries.map( e => `${e.name}: ${e.packs.join(', ')}` ));
-    if (this.config.static.length > 0) console.log("Static Files:", this.config.static);
+    if (statics.length > 0) console.log("Static Files:", statics);
 
-    return { esmodules, styles, languages, templates, packs, packFolders: packFolderEntries, documentTypes, externals };
+    return { esmodules, styles, languages, templates, packs, packFolders: packFolderEntries, documentTypes, externals, statics };
   };
 
   compat = ([min, curr, max]) => {
@@ -343,36 +349,53 @@ class BDConfig {
    * @memberof BDConfig
    */
   build(force = false) {
-    if (force) this.#cache = { manifest: null, replacements: null };
-
-    /** @type ManifestJSON */
-    this.#cache.manifest ??= {
-      title: this.config.title,
-      id: this.config.id,
-      ...this.makeEntryPointFields(this.config.entryPoints),
-      compatibility: this.compat(this.config.dependencies.core),
-      relationships: {
-        systems: this.makeDep(this.config.dependencies.systems),
-        modules: this.makeDep(this.config.dependencies.modules),
-      },
-      description: this.config.description,
-      version: this.config.version,
-      authors: this.config.authors,
-      url: this.config.projectUrl,
-      persistentStorage: !!this.config.storage,
-      socket: !!this.config.socket,
-      manifest: "",
-      download: "",
-      flags: this.config.flags,
-    };
-
-    if (this.profile.premium) {
-      delete this.#cache.manifest.download
-      this.#cache.manifest.manifest = `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
-      this.#cache.manifest.protected = true;
+    if (force) this.#cache = { manifest: null, replacements: null, statics: null, templates: null, externals: null };
+    else {
+      this.#cache ??= {};
+      this.#cache.manifest ??= null;
+      this.#cache.replacements ??= null;
+      this.#cache.statics ??= null;
+      this.#cache.templates ??= null;
+      this.#cache.externals ??= null;
     }
 
-    this.#cache.replacements ??= this.pkgReplacements();
+
+    if (Object.values(this.#cache).some( v => !v ) ) {
+      const {templates, externals, statics, ...entryPoints} = this.makeEntryPointFields(this.config.entryPoints);
+
+      this.#cache.statics ??= statics
+      this.#cache.templates ??= templates;
+      this.#cache.externals ??= externals;
+
+      /** @type ManifestJSON */
+      this.#cache.manifest ??= {
+        id: this.config.id,
+        title: this.config.title,
+        version: this.config.version,
+        description: this.config.description,
+        authors: this.config.authors,
+        url: this.config.projectUrl,
+        compatibility: this.compat(this.config.dependencies.core),
+        relationships: {
+          systems: this.makeDep(this.config.dependencies.systems),
+          modules: this.makeDep(this.config.dependencies.modules),
+        },
+        persistentStorage: !!this.config.storage,
+        socket: !!this.config.socket,
+        manifest: "",
+        download: "",
+        flags: this.config.flags,
+        ...entryPoints,
+      };
+
+      if (this.profile.premium) {
+        delete this.#cache.manifest.download
+        this.#cache.manifest.manifest = `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
+        this.#cache.manifest.protected = true;
+      }
+
+      this.#cache.replacements ??= this.pkgReplacements();
+    }
 
     return this.#cache;
   }
@@ -435,10 +458,6 @@ class BDConfig {
 
     /** @type DenConfigJSON */
     const config = JSON.parse(fs.readFileSync(configPath));
-    config.name = configName;
-    if (!("id" in config)) {
-      config.id = configName;
-    }
 
     /* latch desired profile */
     if (!(profileName in config.profile ?? {})) {
@@ -449,9 +468,18 @@ class BDConfig {
 
     const profile = config.profile[profileName];
     const moduleRoot = path.dirname(configPath);
+
+    config.name = configName;
+
     profile.src = moduleRoot;
     profile.name = profileName;
     profile.flags ??= {};
+
+    /* allow profiles to override module ID */
+    config.id = profile.id ?? config.id ?? configName;
+
+    /* allow main config to define default output destination */
+    profile.dest ??= config.dest;
 
     if (!profile.dest) {
       throw new Error(
@@ -470,19 +498,21 @@ class BDConfig {
     /* Final resting place is defined 'destination' + packageID */
     profile.dest = path.join(profile.dest, config.id);
 
-    config.entryPoints = combineEntryPoints(
-      config.entryPoints,
-      profile.entryPoints
-    );
     config.dependencies ??= {};
     config.dependencies.core ??= [];
     config.dependencies.systems ??= {};
     config.dependencies.modules ??= {};
-    config.static = this.enumerateStatics(config, profile);
     config.authors ??= [];
-    config.flags = this.makeFlags(config, profile);
 
     /* merge profile-based overrides into config */
+    config.entryPoints = combineEntryPoints(
+      config.entryPoints,
+      profile.entryPoints
+    );
+
+    config.flags = this.makeFlags(config, profile);
+    config.version = profile.version ?? config.version;
+
     this.config = config;
     this.profile = profile;
 
