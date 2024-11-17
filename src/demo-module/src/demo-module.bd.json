@@ -32,13 +32,13 @@
   "dest":"../built-demo-module",
   "profile": {
     "altered": {
-      "id": "altered-demo",
+      "id": "altered",
       "version": "2.0.0",
       "package": {
         "create": true,
         "protected": false,
-        "manifest": "https://r2.foundryvtt.com/packages-public/%config.id%/module.json",
-        "download": "https://r2.foundryvtt.com/packages-public/%config.id%/%config.id%-%config.version%.zip"
+        "manifest": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/module.json",
+        "download": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/%config.id%-%config.version%.json"
       },
       "dest": "../built-altered-demo",
       "entryPoints": {
