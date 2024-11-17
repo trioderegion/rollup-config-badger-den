@@ -23,16 +23,28 @@
       "system": "nova"
     }
   },
+  "package": {
+    "name":"%config.id%-%config.version%",
+    "protected": false,
+    "manifest": "",
+    "download": ""
+  },
   "dest":"../built-demo-module",
   "profile": {
     "altered": {
       "id": "altered-demo",
       "version": "2.0.0",
+      "package": {
+        "create": true,
+        "protected": false,
+        "manifest": "https://r2.foundryvtt.com/packages-public/%config.id%/module.json",
+        "download": "https://r2.foundryvtt.com/packages-public/%config.id%/%config.id%-%config.version%.zip"
+      },
       "dest": "../built-altered-demo",
       "entryPoints": {
         "main": "index.mjs"
       },
-      "compress":true,
+      "compress":false,
       "sourcemaps": true,
       "clean": true,
       "hmr": true,
@@ -50,7 +62,12 @@
       "sourcemaps": true,
       "clean": true,
       "hmr": true,
-      "static": ["dev/html"]
+      "static": ["dev/html"],
+      "package": {
+        "create": true,
+        "protected": true,
+        "manifest": "https://r2.foundryvtt.com/packages-public/%config.id%/module.json"
+      }
     },
     "css": {
       "clean": true,

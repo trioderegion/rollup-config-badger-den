@@ -3,7 +3,6 @@ import bdPlug from "./rollup-plugin-badger-den.mjs";
 import commonjs from "@rollup/plugin-commonjs";
 import denDB from "./rollup-plugin-badger-foundry.mjs";
 import fs from "fs";
-import path from "path";
 
 /** @typedef {import('./Manifest.mjs').BDConfig} BDConfig */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -18,7 +17,13 @@ import path from "path";
  *
  * @returns {RollupOptions}
  */
-const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack = false} = {}) => {
+const defineConfig = ({
+  denConfig = null,
+  denPlug = bdPlug,
+  unpack = false,
+  pack = false,
+  version = false,
+} = {}) => {
 
   if (typeof denConfig == 'string') {
     try {
@@ -29,6 +34,12 @@ const defineConfig = ({denConfig = null, denPlug = bdPlug, unpack = false, pack 
       return;
     }
   }
+
+  if (version) {
+    denConfig.config.version = version;
+  }
+
+  if (!denConfig.config.version) throw new Error('Version required for build. See "config.version", "profile.version", or argument "--config-version".');
 
   const packageType = "module"; //TODO support systems
   console.log(`Badger Den: building ${packageType} "${denConfig.config.id}"`);
@@ -77,6 +88,7 @@ const cliConfig = (cliArgs) => {
     denConfig: cliArgs['config-den'],
     pack: cliArgs['config-pack'] ?? false,
     unpack: cliArgs['config-unpack'] ?? false,
+    version: cliArgs['config-version'] ?? false,
   });
 }
 

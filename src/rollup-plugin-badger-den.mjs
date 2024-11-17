@@ -259,10 +259,16 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
           : JSON.stringify(api.cache.manifest, null, 2),
       });
     },
-    closeBundle() {
+    async closeBundle() {
       /* If using module storage */
       if (api.meta.cache.manifest.persistentStorage && !fs.existsSync(path.join(api.meta.profile.dest, 'storage'))) {
         fs.mkdirSync(path.join(api.meta.profile.dest, 'storage'), {recursive: true}) 
+      }
+
+      if (api.meta.config.package.create)
+      {
+        const { zip } = await import('zip-a-folder');
+        await zip(api.meta.profile.dest, path.join(path.resolve(api.meta.profile.dest, '../'), `${api.meta.config.package.name}.zip`), {destPath: api.meta.config.id});
       }
 
     },

@@ -148,12 +148,16 @@ class BDConfig {
 
   // Replacement paths for simple search/replace
   // TODO split paths and lookup recursively
-  pkgReplacements = (pkg = this.config, prefix = this.namespace) => {
-    const flat = flatten(pkg);
-    return Object.keys(flat).reduce((acc, path) => {
+  configReplacements = (prefix = this.namespace) => {
+    const flat = flatten(this.config);
+    const replacements = Object.keys(flat).reduce((acc, path) => {
       acc[`%${prefix}.${path}%`] = flat[path];
       return acc;
     }, {});
+
+    const sConfig = JSON.stringify(this.config);
+    this.config = JSON.parse(this.doReplace(sConfig, replacements))
+    return replacements;
   };
 
   //TODO grab by /%((?\w+).?))+%/g
@@ -359,6 +363,7 @@ class BDConfig {
       this.#cache.externals ??= null;
     }
 
+    this.#cache.replacements ??= this.configReplacements();
 
     if (Object.values(this.#cache).some( v => !v ) ) {
       const {templates, externals, statics, ...entryPoints} = this.makeEntryPointFields(this.config.entryPoints);
@@ -382,19 +387,23 @@ class BDConfig {
         },
         persistentStorage: !!this.config.storage,
         socket: !!this.config.socket,
-        manifest: "",
-        download: "",
+        manifest: this.config.package.manifest,
+        download: this.config.package.download,
         flags: this.config.flags,
         ...entryPoints,
       };
 
+      // TODO dep 'profile.premium'
       if (this.profile.premium) {
-        delete this.#cache.manifest.download
         this.#cache.manifest.manifest = `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
+        this.config.package.protected = true;
+      }
+
+      if (this.config.package.protected) {
+        delete this.#cache.manifest.download
         this.#cache.manifest.protected = true;
       }
 
-      this.#cache.replacements ??= this.pkgReplacements();
     }
 
     return this.#cache;
@@ -515,6 +524,11 @@ class BDConfig {
 
     this.config = config;
     this.profile = profile;
+
+    this.config.package = deepmerge.all([{
+      manifest: "",
+      download: "",
+    }, this.config.package ?? {}, this.profile.package ?? {}]);
 
     return { profile, config };
   }
