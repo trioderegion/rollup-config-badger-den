@@ -41,6 +41,6 @@ jobs:
           draft: false
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './src/demo-module/built-altered-demo/altered-demo/module.json, ./src/demo-module/built-altered-demo/altered-demo-${{github.event.release.tag_name}}.zip'
+          artifacts: './src/demo-module/built-altered-demo/altered/module.json, ./src/demo-module/built-altered-demo/altered-${{github.event.release.tag_name}}.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
