@@ -39,7 +39,7 @@ const defineConfig = ({
     denConfig.config.version = version;
   }
 
-  if (!denConfig.config.version) throw new Error('Version required for build. See "config.version", "profile.version", or argument "--config-version".');
+  if (!denConfig.config.version) throw new Error('Version required for build. See "DenConfigJSON.version", "DenProfileJSON.version", or argument "--config-version [string]".');
 
   const packageType = "module"; //TODO support systems
   console.log(`Badger Den: building ${packageType} "${denConfig.config.id}"`);

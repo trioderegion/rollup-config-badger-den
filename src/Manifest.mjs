@@ -21,19 +21,19 @@ import deepmerge from "deepmerge";
 `src/*.??` //matches all files in the `src` directory (only first level of nesting) that have a two-character extension.
 `file-[01].js` //matches files: `file-0.js`, `file-1.js`.
  *
- * @typedef {string|string[]} globstring
+ * @typedef {String|Array<String>} globstring
  */
 
 /**
- * Definitions for module-included compendium databases. If `string` forms are used, values will apply to all discovered compendiums. If `object` fields are used, values should be `string:string` pairs keyed by the compendium's containing folder, which is used as its ID.
+ * Definitions for module-included compendium databases. If `String` forms are used, values will apply to all discovered compendiums. If `Object` fields are used, values should be `String:String` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
  * @prop {globstring} path Defines root folders for general, or specific database discovery
- * @prop {string|object} type FoundryVTT Document type for discovered databases
- * @prop {string|object} label Displayed name of compendium in FoundryVTT
- * @prop {string|object} [banner] Asset path for compendium banner
- * @prop {string|object} [system] associated system (if any) for compendiums
- * @prop {{label:string, color:?string}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
+ * @prop {String|Object} type FoundryVTT Document type for discovered databases
+ * @prop {String|Object} label Displayed name of compendium in FoundryVTT
+ * @prop {String|Object} [banner] Asset path for compendium banner
+ * @prop {String|Object} [system] associated system (if any) for compendiums
+ * @prop {{label:String, color:?String}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
  */
 
 /**
@@ -47,42 +47,58 @@ import deepmerge from "deepmerge";
  * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
  */
 
-/** 
+/**
+ * Defines if and how the resulting bundle should be packaged as a .zip file for distribution. Resulting archive is placed as a sibling of the profile's destination path.
+ *
+ * @typedef {Object} PackageJSON
+ * @prop {Boolean} [create=false] Should the resulting bundle be zipped for distribution
+ * @prop {String} [name] Base name of the resulting zip file, e.g. "cool-mod" -> "cool-mod.zip". Defaults to "[id]-[version]".
+ * @prop {Boolean} [protected=false] Controls packing for premium modules and has the following side effects:
+ *                                      - `manifest`: defaults to Foundry's premium content server unless specified otherwise
+ *                                      - `download`: removes this field (if provided) as it is served from Foundry after DRM validation
+ * @prop {String} [manifest=""] URL pointing to the most recent release's manifest file
+ * @prop {String} [download=""] URL pointing to this specific release's distribution package (.zip file)
+ */
+
+/**
  * @typedef {Object} DenProfileJSON
- * @prop {string} [dest] output directory for resulting build, relative to this bd config file (overrides {@link DenConfigJSON.dest})
- * @prop {string} [id] top level identifier for module (overrides {@link DenConfigJSON.id})
- * @prop {string} [version] directly added to resulting manifest (overrides {@link DenConfigJSON.version})
- * @prop {boolean} [compress] compress resulting json, (m)js, and css files (extremely conservative, but do confirm proper operation)
- * @prop {boolean} [sourcemaps] generate sourcemaps for resulting (m)js and css files.
- * @prop {boolean} [clean] clear contents of target `dest` directory before build (does not clean on watch)
- * @prop {boolean} [hmr] enable hot reload functionality for html, css, hbs, and json files (overrides `clean` to false)
+ * @prop {String} [dest] output directory for resulting build, relative to this bd config file (overrides {@link DenConfigJSON.dest})
+ * @prop {String} [id] top level identifier for module (overrides {@link DenConfigJSON.id})
+ * @prop {String} [version] directly added to resulting manifest (overrides {@link DenConfigJSON.version})
+ * @prop {Boolean} [compress] compress resulting json, (m)js, and css files (extremely conservative, but do confirm proper operation)
+ * @prop {Boolean} [sourcemaps] generate sourcemaps for resulting (m)js and css files.
+ * @prop {Boolean} [clean] clear contents of target `dest` directory before build (does not clean on watch)
+ * @prop {Boolean} [hmr] enable hot reload functionality for html, css, hbs, and json files (overrides `clean` to false)
  * @prop {EntryPointJSON} [entryPoints] merged with top level `entryPoints` field; see {@link DenConfigJSON.entryPoints}
  * @prop {globstring} [static] merged with top level `static` field; see {@link DenConfigJSON.static}
- * @prop {object} [flags] merged with top level `flags` field; see {@link DenConfigJSON.flags}
+ * @prop {PackageJSON} [package] Profile-specific packaging instructions, merged with top-level field.
+ * @prop {Object} [flags] merged with top level `flags` field; see {@link DenConfigJSON.flags}
  */
 
 /**
  * @typedef {Object} DenConfigJSON
- * @prop {string} [id] top level identifier for module (default taken from bd file name, as `[id].bd.json`)
- * @prop {string} version directly added to resulting manifest
- * @prop {string} title directly added to resulting manifeste
- * @prop {string} description directly added to resulting manifest 
- * @prop {string} [projectUrl]
+ * @prop {String} [id] Top level identifier for module (default is BD file name, as `[id].bd.json`)
+ * @prop {String} version Directly added to resulting manifest
+ * @prop {String} title Directly added to resulting manifeste
+ * @prop {String} description Directly added to resulting manifest
+ * @prop {String} [projectUrl]
+ * @prop {PackageJSON} [package] Global packaging instructions for all profiles. Overridden by profile entries.
  * @prop {EntryPointJSON} entryPoints
- * @prop {string} dest output directory for resulting build, relative to this bd config file
- * @prop {globstring} [static] file/folder paths to be directly copied to built package _once_ upon initial bundle only (not re-copied on watch trigger)
- * @prop {Object.<string, DenProfileJSON>} profile list of profile objects keyed by its name, such as 'release' or 'dev'
- * @prop {object} [dependencies] inner string arrays are treated as `[min, verified, max]` versions
- * @prop {string[]} [dependencies.core=[]]
- * @prop {Object.<string,string[]>} [dependencies.modules={}] module id to version array
- * @prop {Object.<string,string[]>} [dependencies.systems={}] system id to version array
- * @prop {object|object[]} [authors] directly added to resulting manifest
- * @prop {object} [flags] directy added to resulting manifest
- * @prop {boolean} [socket=false] directly added to resulting manifest -- automatically detected by presense of 'game.socket' in bundled code.
- * @prop {boolean} [storage=false] directly added to resulting manifest as "persistentStorage" -- automatically detected by presense of 'uploadPersistent' in bundled code.
+ * @prop {String} dest Output directory for resulting build, relative to this bd config file
+ * @prop {globstring} [static] File/folder paths to be directly copied to built package _once_ upon initial bundle only (not 
+ *                             re-copied on watch trigger)
+ * @prop {Record<String, DenProfileJSON>} profile List of profile objects keyed by its name, such as 'release' or 'dev'
+ * @prop {Object} [dependencies] Inner String arrays are treated as `[min, verified, max]` versions
+ * @prop {Array<String>} [dependencies.core=[]]
+ * @prop {Record<String,Array<String>>} [dependencies.modules={}] Module id to version array
+ * @prop {Record<String,Array<String>>} [dependencies.systems={}] System id to version array
+ * @prop {Object|Array<Object>} [authors] Directly added to resulting manifest
+ * @prop {Object} [flags] Directy added to resulting manifest
+ * @prop {Boolean} [socket=false] Directly added to resulting manifest -- automatically detected by presense
+ *                                of 'game.socket' in bundled code.
+ * @prop {Boolean} [storage=false] Directly added to resulting manifest as "persistentStorage" -- automatically
+ *                                 detected by presense of 'uploadPersistent' in bundled code.
  */
-
-
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 
@@ -156,7 +172,7 @@ class BDConfig {
     }, {});
 
     const sConfig = JSON.stringify(this.config);
-    this.config = JSON.parse(this.doReplace(sConfig, replacements))
+    this.config = JSON.parse(this.doReplace(sConfig, replacements));
     return replacements;
   };
 
@@ -172,14 +188,23 @@ class BDConfig {
 
   enumerateStatics(config = {}, profile = {}) {
     config.static ??= [];
-    profile.static ??=[];
+    profile.static ??= [];
 
     if (typeof config.static == "string") config.static = [config.static];
     if (typeof profile.static == "string") profile.static = [profile.static];
 
-    const globs = config.static.concat(profile.static).map( path => posixPath(path) );
+    const globs = config.static
+      .concat(profile.static)
+      .map((path) => posixPath(path));
 
-    const staticFiles = glob(globs, { cwd: profile.src, onlyFiles: true, unique: true, matchBase: true, posix: true, ignore: ['*.scss', '*.sw*', '*.tmp', '*.orig'] });
+    const staticFiles = glob(globs, {
+      cwd: profile.src,
+      onlyFiles: true,
+      unique: true,
+      matchBase: true,
+      posix: true,
+      ignore: ["*.scss", "*.sw*", "*.tmp", "*.orig"],
+    });
     return staticFiles;
   }
 
@@ -197,21 +222,25 @@ class BDConfig {
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, { cwd: profile.src, onlyFiles: true })
-        .map(posixPath)
+      glob(entry, { cwd: profile.src, onlyFiles: true }).map(posixPath)
     );
 
     /* Templates */
     let templates = entryPoints.templates ?? [];
     if (typeof templates == "string") templates = [templates];
     templates = templates.flatMap((entry) =>
-      glob(entry, { cwd: profile.src, onlyFiles: true })
-        .map(posixPath)
+      glob(entry, { cwd: profile.src, onlyFiles: true }).map(posixPath)
     );
 
     /* Compiled Styles */
-    this.config.styleSources = glob("**/*.{scss,less,css}", {cwd: profile.src, onlyFiles: true, unique: true, gitignore:true}).map(posixPath);
-    const styles = this.config.styleSources.length > 0 ? [this.config.id + '.css'] : [];
+    this.config.styleSources = glob("**/*.{scss,less,css}", {
+      cwd: profile.src,
+      onlyFiles: true,
+      unique: true,
+      gitignore: true,
+    }).map(posixPath);
+    const styles =
+      this.config.styleSources.length > 0 ? [this.config.id + ".css"] : [];
 
     /* Discovered Languages */
     let languages = entryPoints.lang ?? [];
@@ -272,9 +301,9 @@ class BDConfig {
       return val[name];
     };
 
-    const compendiumFields = Reflect.ownKeys(entryPoints.compendia ?? {}).filter(
-      (key) => !key.includes("path")
-    );
+    const compendiumFields = Reflect.ownKeys(
+      entryPoints.compendia ?? {}
+    ).filter((key) => !key.includes("path"));
 
     const packs = packFolders.map((folder) => {
       const folderPath = posixPath(folder);
@@ -302,15 +331,24 @@ class BDConfig {
 
     const folder = entryPoints.compendia?.folder ?? {};
     const packFolderEntries = [];
-    if ('label' in folder) {
-      packFolderEntries.push({name: folder.label, color: folder.color ?? '#000000', packs: packs.map( p => p.name )});
+    if ("label" in folder) {
+      packFolderEntries.push({
+        name: folder.label,
+        color: folder.color ?? "#000000",
+        packs: packs.map((p) => p.name),
+      });
     }
 
     const statics = this.enumerateStatics(this.config, this.profile);
 
     console.log("Entry Points:", [...esmodules, ...externals]);
-    if (styles.length > 0 ) console.log("Discovered Styles:", this.config.styleSources);
-    if (languages.length > 0) console.log("Discovered Languages:", languages.map( lang => `${lang.name} (${lang.path})`));
+    if (styles.length > 0)
+      console.log("Discovered Styles:", this.config.styleSources);
+    if (languages.length > 0)
+      console.log(
+        "Discovered Languages:",
+        languages.map((lang) => `${lang.name} (${lang.path})`)
+      );
     if (templates.length > 0) console.log("Discovered Templates:", templates);
     if (defFiles.length > 0)
       console.log(
@@ -319,11 +357,29 @@ class BDConfig {
           (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
         )
       );
-    if (packs.length > 0) console.log("Discovered Compendia:", packs.map( p => p.path ));
-    if (packFolderEntries.length > 0) console.log("Compendium Folders:", packFolderEntries.map( e => `${e.name}: ${e.packs.join(', ')}` ));
+    if (packs.length > 0)
+      console.log(
+        "Discovered Compendia:",
+        packs.map((p) => p.path)
+      );
+    if (packFolderEntries.length > 0)
+      console.log(
+        "Compendium Folders:",
+        packFolderEntries.map((e) => `${e.name}: ${e.packs.join(", ")}`)
+      );
     if (statics.length > 0) console.log("Static Files:", statics);
 
-    return { esmodules, styles, languages, templates, packs, packFolders: packFolderEntries, documentTypes, externals, statics };
+    return {
+      esmodules,
+      styles,
+      languages,
+      templates,
+      packs,
+      packFolders: packFolderEntries,
+      documentTypes,
+      externals,
+      statics,
+    };
   };
 
   compat = ([min, curr, max]) => {
@@ -353,7 +409,14 @@ class BDConfig {
    * @memberof BDConfig
    */
   build(force = false) {
-    if (force) this.#cache = { manifest: null, replacements: null, statics: null, templates: null, externals: null };
+    if (force)
+      this.#cache = {
+        manifest: null,
+        replacements: null,
+        statics: null,
+        templates: null,
+        externals: null,
+      };
     else {
       this.#cache ??= {};
       this.#cache.manifest ??= null;
@@ -365,10 +428,11 @@ class BDConfig {
 
     this.#cache.replacements ??= this.configReplacements();
 
-    if (Object.values(this.#cache).some( v => !v ) ) {
-      const {templates, externals, statics, ...entryPoints} = this.makeEntryPointFields(this.config.entryPoints);
+    if (Object.values(this.#cache).some((v) => !v)) {
+      const { templates, externals, statics, ...entryPoints } =
+        this.makeEntryPointFields(this.config.entryPoints);
 
-      this.#cache.statics ??= statics
+      this.#cache.statics ??= statics;
       this.#cache.templates ??= templates;
       this.#cache.externals ??= externals;
 
@@ -395,15 +459,16 @@ class BDConfig {
 
       // TODO dep 'profile.premium'
       if (this.profile.premium) {
-        this.#cache.manifest.manifest = `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
+        console.warn('[Deprecation: DenProfileJSON.premium] Use [DenConfigJSON|DenProfileJSON].package.protected instead. See PackageJSON.protected. Will be removed in version 2.0.');
         this.config.package.protected = true;
       }
 
       if (this.config.package.protected) {
-        delete this.#cache.manifest.download
+        /* add default premium manifest path if none present */
+        this.#cache.manifest.manifest = this.config.package.manifest ? this.config.package.manifest : `https://r2.foundryvtt.com/packages-public/${this.config.id}/module.json`;
+        delete this.#cache.manifest.download;
         this.#cache.manifest.protected = true;
       }
-
     }
 
     return this.#cache;
@@ -414,7 +479,7 @@ class BDConfig {
       throw new Error('Cannot modify unbuilt manifest. Run "build()" first.');
     }
 
-    return this.#cache.manifest[key] = value;
+    return (this.#cache.manifest[key] = value);
   }
 
   makeFlags(config, profile) {
@@ -499,9 +564,10 @@ class BDConfig {
     if (!path.isAbsolute(profile.dest))
       profile.dest = path.resolve(path.join(configRel, profile.dest));
 
-    // Sanity check to make sure parent directory of the module (i.e. profile.dest) exists.
+    /* Sanity check to make sure parent directory of the 
+     * module (i.e. profile.dest) exists. */
     if (!fs.existsSync(profile.dest)) {
-      fs.mkdirSync(profile.dest, {recursive:true});
+      fs.mkdirSync(profile.dest, { recursive: true });
     }
 
     /* Final resting place is defined 'destination' + packageID */
@@ -525,16 +591,25 @@ class BDConfig {
     this.config = config;
     this.profile = profile;
 
-    this.config.package = deepmerge.all([{
-      manifest: "",
-      download: "",
-    }, this.config.package ?? {}, this.profile.package ?? {}]);
+    this.config.package = deepmerge.all([
+      {
+        name: `${this.config.id}-${this.config.version}`,
+        create: false,
+        protected: false,
+        manifest: "",
+        download: "",
+      },
+      this.config.package ?? {},
+      this.profile.package ?? {},
+    ]);
 
     return { profile, config };
   }
 
   get styleSources() {
-    return this.config.styleSources.map( source => this.makeInclude(this.profile.src, source) );
+    return this.config.styleSources.map((source) =>
+      this.makeInclude(this.profile.src, source)
+    );
   }
 
   makeInclude(root, target) {

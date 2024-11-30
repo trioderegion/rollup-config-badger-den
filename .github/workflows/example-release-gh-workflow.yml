@@ -7,9 +7,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
     permissions:
       contents: write
       pages: write
@@ -17,30 +14,23 @@ jobs:
     steps:
       
       - uses: actions/checkout@v3
-        if: "github.event.release.prerelease"
-      - name: Use Node.js ${{ matrix.node-version }}
-        if: "github.event.release.prerelease"
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20.x
       - run: npm ci
-        if: "github.event.release.prerelease"
-      - run: npm run build
-        if: "github.event.release.prerelease"
-      - run: npm run example-module -- --config-version "${{github.event.release.tag_name}}"
-        if: "github.event.release.prerelease"
+      - run: npm run build -- --config-version "${{github.event.release.tag_name}}"
 
       # Create a release for this specific version
       - name: Update Release with Files
-        if: "github.event.release.prerelease"
         id: create_version_release
         uses: ncipollo/release-action@v1.12.0
         with:
           allowUpdates: true # Set this to false if you want to prevent updating existing releases
           name: ${{ github.event.release.name }}
           draft: false
-          prerelease: true
+          prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: './src/demo-module/built-altered-demo/altered/module.json, ./src/demo-module/built-altered-demo/altered-${{github.event.release.tag_name}}.zip'
+          artifacts: './dist/${{github.repository}}/module.json, ./dist/${{github.repository}}-${{github.event.release.tag_name}}.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}

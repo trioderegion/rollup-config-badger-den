@@ -17,13 +17,16 @@ Create different build configurations for various develeopment activities, such 
 Manage compendium/database sources and optionally compile to, or extract from, human-readable source files and LevelDB/Foundry compatible compendium databases.
 
 ### Source Structure Flexibility
-Your code; your rules. Between file discovery via `fast-glob` and Rollup's own magic, the Den is happy with whatever file structure you use.
+Your code; your rules. Between file discovery via `glob` and Rollup's own magic, the Den is happy with whatever file structure you use.
 
 ### Stylesheet Bundling and Compilation
-Supports Sass `scss` and standard `css` files with results bundled into a single css file, with appropriate module manifest entries. Simply `import` the stylesheet into your JS entry point, or any other relevant JS file. Dependent stylesheets will be automatically discovered and bundled as required.
+Supports Sass (`scss`), Less (`less`), and standard CSS (`css`) files with results bundled into a single css file and appropriate module manifest entries. Simply `import` the stylesheet into your JS entry point, or any other relevant JS file. Dependent stylesheets will be automatically discovered and bundled as required. Badger Den supports mixed style languages and resolves based on extension (note, Sass files should use `.scss` extension).
 
 ### External Module Support
 Include browser-compatible utilities or libraries sourced from NPM packages or third party sources easily and without hassle.
+
+### Distribution Package Creation
+Automatically modify resulting manifest and create distributable zip file for installation via Foundry's package manager, eliminating the need for complex build and file substitution workflows. Bundle code and styles, pack compendium databases, define release version, and produce final distribution package (zip and manifest) in a single step! You can find an example workflow file for GitHub Actions [here](https://github.com/trioderegion/rollup-config-badger-den/blob/master/.github/workflows/example-release-gh-workflow.yml)
 
 ## Installation
 
@@ -56,16 +59,24 @@ Using the above, the build would be started with `npm run develop`, where `devel
 
 ### Additional Arguments
 
+These arguments can be added directly to the npm script entry, or passed along from the command line. Note, when passing via the command line, the arguments must be seperated by `--` from the rest of the npm script command, as seen in the example below.
+
+`npm run develop -- -w --config-pack`
+`npm run release -- --config-pack --config-version "1.0"`
+
+#### Rollup Options
+
 `-w | --watch` Enable Rollup's watch mode, recompiling on changes.
+
+#### Compendium Options
 
 `--config-pack [only]` Compile LevelDB compendiums during build. If `only` is used (e.g. `--config-pack only`), this bundling operation will _only_ pack the defined compendia paths, rather than both packing compendia and bundling module code. Note, due to optional `only` argument, `--config-pack/unpack` must be the last configuration argument provided to Rollup.
 
 `--config-unpack [only]` Extract LevelDB binary compendiums to human-readable source files. See `--config-pack` for `only` usage notes.
 
-These arguments can be added directly to the npm script entry, or passed along from the command line. Note, when passing via the command line, the arguments must be seperated by `--` from the rest of the npm script command, as seen in the example below.
+#### Other Options
 
-`npm run develop -- -w --config-pack`
-
+`--config-version "[string]"` Set the version of the resulting bundle. This overrides any entries in the DenConfigJSON and useful for automated build workflows.
 
 <p align="center">
   <img src="https://storage.googleapis.com/badgerwerks/branding/badgerwerks-badge-sm.webp" title="BadgerWerks badge">
