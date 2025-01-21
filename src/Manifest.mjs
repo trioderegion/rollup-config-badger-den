@@ -436,6 +436,19 @@ class BDConfig {
       this.#cache.templates ??= templates;
       this.#cache.externals ??= externals;
 
+      /* Prepare final packaging data */
+      this.config.package = deepmerge.all([
+        {
+          name: `${this.config.id}-${this.config.version}`,
+          create: false,
+          protected: false,
+          manifest: "",
+          download: "",
+        },
+        this.config.package ?? {},
+        this.profile.package ?? {},
+      ]);
+
       /** @type ManifestJSON */
       this.#cache.manifest ??= {
         id: this.config.id,
@@ -456,6 +469,8 @@ class BDConfig {
         flags: this.config.flags,
         ...entryPoints,
       };
+
+
 
       // TODO dep 'profile.premium'
       if (this.profile.premium) {
@@ -591,17 +606,7 @@ class BDConfig {
     this.config = config;
     this.profile = profile;
 
-    this.config.package = deepmerge.all([
-      {
-        name: `${this.config.id}-${this.config.version}`,
-        create: false,
-        protected: false,
-        manifest: "",
-        download: "",
-      },
-      this.config.package ?? {},
-      this.profile.package ?? {},
-    ]);
+
 
     return { profile, config };
   }
