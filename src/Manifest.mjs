@@ -31,6 +31,7 @@ import deepmerge from "deepmerge";
  * @prop {globstring} path Defines root folders for general, or specific database discovery
  * @prop {String|Object} type FoundryVTT Document type for discovered databases
  * @prop {String|Object} label Displayed name of compendium in FoundryVTT
+ * @prop {Object} ownership User permissions for compendiums
  * @prop {String|Object} [banner] Asset path for compendium banner
  * @prop {String|Object} [system] associated system (if any) for compendiums
  * @prop {{label:String, color:?String}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
@@ -390,9 +391,10 @@ class BDConfig {
     return data;
   };
 
-  makeDep = (deps) =>
+  makeDep = (deps, type = 'module') =>
     Object.entries(deps).map(([id, versions]) => ({
       id,
+      type,
       compatibility: this.compat(versions),
     }));
 
@@ -459,8 +461,8 @@ class BDConfig {
         url: this.config.projectUrl,
         compatibility: this.compat(this.config.dependencies.core),
         relationships: {
-          systems: this.makeDep(this.config.dependencies.systems),
-          modules: this.makeDep(this.config.dependencies.modules),
+          systems: this.makeDep(this.config.dependencies.systems, 'system'),
+          requires: this.makeDep(this.config.dependencies.modules, 'module'),
         },
         persistentStorage: !!this.config.storage,
         socket: !!this.config.socket,
