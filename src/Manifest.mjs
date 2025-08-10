@@ -3,6 +3,7 @@ import { globSync as glob } from "glob";
 import path from "path";
 import fs from "fs";
 import deepmerge from "deepmerge";
+import JSON5 from "json5";
 
 /** 
  * A string, or string array, of "glob" paths describing files/folders.
@@ -537,18 +538,23 @@ class BDConfig {
     }
 
     /* load package config */
-    const configPath = path.join(configRel, configName + ".bd.json");
+    const json5Path = path.join(configRel, configName + ".bd.json5");
+    const jsonPath = path.join(configRel, configName + ".bd.json");
 
-    if (!fs.existsSync(configPath)) {
+    const configPath = fs.existsSync(json5Path) ? json5Path : fs.existsSync(jsonPath) ? jsonPath : null;
+
+    if (!configPath) {
       throw new Error(
-        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${configPath}" from "${
+        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${json5Path}" or "${jsonPath}" from "${
           import.meta.url
         }".`
       );
     }
 
+    const configFile = fs.readFileSync(configPath)
+
     /** @type DenConfigJSON */
-    const config = JSON.parse(fs.readFileSync(configPath));
+    const config = JSON5.parse(configFile);
 
     /* latch desired profile */
     if (!(profileName in config.profile ?? {})) {
