@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="https://storage.googleapis.com/badgerwerks/branding/badger-den-badge-sm.webp" title="Badger Den badge">
+  <img width="300" height="300" alt="badger-den-badge" src="https://github.com/user-attachments/assets/b4a08b1e-86d2-4332-9136-9078f968c92c" />
+
 </p>
 
 ## What is the Badger Den?
@@ -77,8 +78,3 @@ These arguments can be added directly to the npm script entry, or passed along f
 #### Other Options
 
 `--config-version "[string]"` Set the version of the resulting bundle. This overrides any entries in the DenConfigJSON and useful for automated build workflows.
-
-<p align="center">
-  <img src="https://storage.googleapis.com/badgerwerks/branding/badgerwerks-badge-sm.webp" title="BadgerWerks badge">
-  <br><em>Badger Den is a BadgerWerks production</em>
-</p>
