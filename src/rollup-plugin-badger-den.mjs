@@ -254,7 +254,6 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       api.manifestId = this.emitFile({
         type: "prebuilt-chunk",
         fileName: "module.json",
-        // Dont compress the JSON
         code: JSON.stringify(api.cache.manifest, null, 2),
       });
     },
