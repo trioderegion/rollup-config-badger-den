@@ -135,14 +135,17 @@ class BDConfig {
    *
    * @constructor
    * @param {string} profileURI
-   * @param {string} [namespace='config'] Top level namespace for which all fields inside the declared den config file are available in source code as '%namespace.path.to.field%'.
+   * @param {object} [options]
+   * @param {string} [options.namespace='config'] Top level namespace for which all fields inside the declared den config file are available in source code as '%namespace.path.to.field%'.
+   * @param {object} [options.overrides={}] Run-time changes to parsed BD config.
    */
-  constructor(profileURI, namespace = "config") {
+  constructor(profileURI, options = {}) {
     profileURI = path.isAbsolute(profileURI)
       ? profileURI
       : path.join(process.env.INIT_CWD, profileURI);
 
-    this.namespace = namespace;
+    this.namespace = options.namespace ?? 'config';
+    this.overrides = options.overrides ?? {};
     this.load(profileURI);
     this.templates = [];
     this.externals = [];
@@ -584,8 +587,7 @@ class BDConfig {
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
 
-
-    this.config = config;
+    this.config = deepmerge(config, this.overrides);
     this.profile = profile;
 
     /* do local config/profile replacements */

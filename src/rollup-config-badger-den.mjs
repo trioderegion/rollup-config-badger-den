@@ -24,10 +24,14 @@ const defineConfig = ({
   pack = false,
   version = false,
 } = {}) => {
+  const overrides = {}
+  if (version) {
+    overrides.version = version;
+  }
 
   if (typeof denConfig == 'string') {
     try {
-      denConfig = new loader(denConfig);
+      denConfig = new loader(denConfig, {overrides});
     } catch (e) {
       console.log(e);
       console.log(`Badger Den: Config/profile identifier "${denConfig}"`);
@@ -35,14 +39,10 @@ const defineConfig = ({
     }
   }
 
-  if (version) {
-    denConfig.config.version = version;
-  }
-
   if (!denConfig.config.version) throw new Error('Version required for build. See "DenConfigJSON.version", "DenProfileJSON.version", or argument "--config-version [string]".');
 
   const packageType = "module"; //TODO support systems
-  console.log(`Badger Den: building ${packageType} "${denConfig.config.id}"`);
+  console.log(`Badger Den: building ${packageType} "${denConfig.config.id}@${denConfig.config.version}"`);
   console.log(`-- Profile: "${denConfig.profile.name}"`);
   console.log(`-- From   : ${denConfig.profile.src}`)
   console.log(`-- To     : ${denConfig.profile.dest}`);
