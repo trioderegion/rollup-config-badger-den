@@ -115,20 +115,6 @@ const combineEntryPoints = (a = {}, b = {}) => {
   return deepmerge(a, b);
 };
 
-// Flatten an object to dot notation
-const flatten = (obj, roots = [], sep = ".") =>
-  Object.keys(obj).reduce(
-    (memo, prop) =>
-      Object.assign(
-        {},
-        memo,
-        Object.prototype.toString.call(obj[prop]) === "[object Object]"
-          ? flatten(obj[prop], roots.concat([prop]), sep)
-          : { [roots.concat([prop]).join(sep)]: obj[prop] }
-      ),
-    {}
-  );
-
 /**
  * Class which represents the data contained within a specific Badger Den config file. E.g. './rollup-config-badger-den.bd.json'.
  */
@@ -156,37 +142,28 @@ class BDConfig {
       ? profileURI
       : path.join(process.env.INIT_CWD, profileURI);
 
-    const { profile, config } = this.load(profileURI);
-    this.config = config;
-    this.profile = profile;
+    this.namespace = namespace;
+    this.load(profileURI);
     this.templates = [];
     this.externals = [];
-    this.namespace = namespace;
   }
 
-  // Replacement paths for simple search/replace
-  // TODO split paths and lookup recursively
-  configReplacements = (prefix = this.namespace) => {
-    const flat = flatten(this.config);
-    const replacements = Object.keys(flat).reduce((acc, path) => {
-      acc[`%${prefix}.${path}%`] = flat[path];
-      return acc;
-    }, {});
+  makeSubstitutions(targetString, ref = this.config) {
+    const exp = /%([\w\.]+)%/g;
 
-    const sConfig = JSON.stringify(this.config);
-    this.config = JSON.parse(this.doReplace(sConfig, replacements));
-    return replacements;
-  };
+    while(targetString.search(exp) >= 0) {
+      targetString = targetString.replaceAll(exp, (_, path) => {
+        //console.log('Match', _, 'Path', path);
+        const parts = path.split('.');
+        if (parts.at(0) === this.namespace) parts.shift();
+        const replacement = parts.reduce( (curr, part) => curr[part], ref );
+        //console.log('Replacement', replacement);
+        return replacement;
+      });
+    }
 
-  //TODO grab by /%((?\w+).?))+%/g
-  doReplace = (targetString, replacements = this.#cache.replacements) => {
-    //console.log('replacements', replacements);
-    Object.entries(replacements).forEach(([key, val]) => {
-      const regex = new RegExp(key, "g");
-      targetString = targetString.replace(regex, () => val);
-    });
     return targetString;
-  };
+  }
 
   enumerateStatics(config = {}, profile = {}) {
     config.static ??= [];
@@ -415,7 +392,6 @@ class BDConfig {
     if (force)
       this.#cache = {
         manifest: null,
-        replacements: null,
         statics: null,
         templates: null,
         externals: null,
@@ -423,13 +399,10 @@ class BDConfig {
     else {
       this.#cache ??= {};
       this.#cache.manifest ??= null;
-      this.#cache.replacements ??= null;
       this.#cache.statics ??= null;
       this.#cache.templates ??= null;
       this.#cache.externals ??= null;
     }
-
-    this.#cache.replacements ??= this.configReplacements();
 
     if (Object.values(this.#cache).some((v) => !v)) {
       const { templates, externals, statics, ...entryPoints } =
@@ -611,10 +584,14 @@ class BDConfig {
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
 
+
     this.config = config;
     this.profile = profile;
 
-
+    /* do local config/profile replacements */
+    this.config = JSON5.parse(this.makeSubstitutions(JSON5.stringify(this.config)));
+    this.profile = JSON5.parse(this.makeSubstitutions(JSON5.stringify(this.profile)));
+    //console.log('config', this.config, 'profile', this.profile);
 
     return { profile, config };
   }

@@ -39,7 +39,7 @@
         "create": true,
         "protected": false,
         "manifest": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/module.json",
-        "download": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/%config.id%-%config.version%.json"
+        "download": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/%config.package.name%.zip"
       },
       "dest": "../built-altered-demo",
       "entryPoints": {
@@ -66,8 +66,9 @@
       "static": ["dev/html"],
       "package": {
         "create": true,
-        "protected": true,
-        "manifest": "https://r2.foundryvtt.com/packages-public/%config.id%/module.json"
+        "protected": false,
+        "manifest": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/module.json",
+        "download": "https://github.com/trioderegion/rollup-config-badger-den/releases/download/%config.version%/%config.package.name%.zip"
       }
     },
     "css": {

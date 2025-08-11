@@ -254,9 +254,8 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       api.manifestId = this.emitFile({
         type: "prebuilt-chunk",
         fileName: "module.json",
-        code: api.meta.profile.compress
-          ? JSON.stringify(api.cache.manifest)
-          : JSON.stringify(api.cache.manifest, null, 2),
+        // Dont compress the JSON
+        code: JSON.stringify(api.cache.manifest, null, 2),
       });
     },
     async closeBundle() {
@@ -274,7 +273,7 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
     },
     transform(code) {
       /* replace any usages of %global% with derived value */
-      code = api.meta.doReplace(code);
+      code = api.meta.makeSubstitutions(code);
 
       /* if we can find any instance of 'game.socket' set the
        * manifest flag post-creation */

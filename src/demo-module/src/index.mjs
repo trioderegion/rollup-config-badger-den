@@ -9,4 +9,4 @@ import lib from './lib/index.mjs';
 console.log('Hello World test', lib.tiny('Hello World, But Tiny'));
 
 /* can access any primitive value held in db.json configuration */
-console.log(`%config.version%`);
+console.log(`%config.version%`, '%config.package.download%');
