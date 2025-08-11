@@ -63,6 +63,7 @@
   },
   "overrides": {
     "@rollup/pluginutils": ">=5.2",
+    "glob": "^11.0.3",
     "tmp": ">=0.2"
   },
   "keywords": [
