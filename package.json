@@ -24,6 +24,7 @@
     "vars": "node -p process.env",
     "test-comp": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack",
     "test-extr": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-pack && rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test --config-unpack",
+    "test-features": "rollup --c src/rollup-config-badger-den.mjs --config-den src/demo-module/src/demo-module:test",
     "example-module": "rollup --config dist/index.mjs --config-den src/demo-module/src/demo-module:altered --config-pack"
   },
   "engines": {

@@ -64,6 +64,11 @@
       "clean": true,
       "hmr": true,
       "static": ["dev/html"],
+      "dependencies": {
+        optional: {
+          "sgeh-monkeydm": ['6.1'],
+        }
+      },
       "package": {
         "create": true,
         "protected": false,

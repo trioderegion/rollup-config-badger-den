@@ -94,6 +94,7 @@ import JSON5 from "json5";
  * @prop {Array<String>} [dependencies.core=[]]
  * @prop {Record<String,Array<String>>} [dependencies.modules={}] Module id to version array
  * @prop {Record<String,Array<String>>} [dependencies.systems={}] System id to version array
+ * @prop {Record<String,Array<String>>} [dependencies.optional={}] Module id to version array
  * @prop {Object|Array<Object>} [authors] Directly added to resulting manifest
  * @prop {Object} [flags] Directy added to resulting manifest
  * @prop {Boolean} [socket=false] Directly added to resulting manifest -- automatically detected by presense
@@ -372,7 +373,7 @@ class BDConfig {
     return data;
   };
 
-  makeDep = (deps, type = 'module') =>
+  makeDep = (deps = {}, type = 'module') =>
     Object.entries(deps).map(([id, versions]) => ({
       id,
       type,
@@ -440,6 +441,7 @@ class BDConfig {
         relationships: {
           systems: this.makeDep(this.config.dependencies.systems, 'system'),
           requires: this.makeDep(this.config.dependencies.modules, 'module'),
+          recommends: this.makeDep(this.config.dependencies.optional, 'module'),
         },
         persistentStorage: !!this.config.storage,
         socket: !!this.config.socket,
@@ -448,8 +450,6 @@ class BDConfig {
         flags: this.config.flags,
         ...entryPoints,
       };
-
-
 
       // TODO dep 'profile.premium'
       if (this.profile.premium) {
@@ -572,11 +572,7 @@ class BDConfig {
     /* Final resting place is defined 'destination' + packageID */
     profile.dest = path.join(profile.dest, config.id);
 
-    config.dependencies ??= {};
-    config.dependencies.core ??= [];
-    config.dependencies.systems ??= {};
-    config.dependencies.modules ??= {};
-    config.authors ??= [];
+   config.authors ??= [];
 
     /* merge profile-based overrides into config */
     config.entryPoints = combineEntryPoints(
@@ -584,9 +580,16 @@ class BDConfig {
       profile.entryPoints
     );
 
+    config.dependencies ??= {};
+    config.dependencies.core ??= [];
+    config.dependencies.systems ??= {};
+    config.dependencies.modules ??= {};
+    config.dependencies.optional ??= {};
+    config.dependencies = deepmerge(config.dependencies, profile.dependencies ?? {});
+ 
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
-
+    
     this.config = deepmerge(config, this.overrides);
     this.profile = profile;
 
