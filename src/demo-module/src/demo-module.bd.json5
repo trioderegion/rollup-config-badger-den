@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "title": "Badger Den Demo Module",
   "description": "Demonstration module built from the Badger Den",
-  "projectUrl": "https://www.npmjs.com/rollup-config-badger-den",
   "entryPoints": {
     "lang": "static/lang/**",
     "templates": "templates/*",
@@ -25,10 +24,10 @@
     }
   },
   "package": {
-    "name":"%config.id%-%config.version%",
-    "protected": false,
-    "manifest": "",
-    "download": ""
+    name:"%config.id%-%config.version%",
+    url: "https://github.com/trioderegion/steinhardts-support-desk",
+    bugs: "%package.url%/issues",
+    changelog: "%package.url%/discussions/categories/updates",
   },
   "dest":"../built-demo-module",
   "profile": {
