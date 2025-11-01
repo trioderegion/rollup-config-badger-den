@@ -503,7 +503,7 @@ class BDConfig {
     }
 
     this.config.package.media = ensureArray(this.config.package.media); 
-    this.profile.package.media = ensureArray(this.config.package.media); 
+    this.profile.package.media = ensureArray(this.profile.package.media); 
 
     /* Prepare final packaging data */
     this.config.package = deepmerge.all([

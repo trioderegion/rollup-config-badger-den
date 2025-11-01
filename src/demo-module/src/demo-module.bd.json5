@@ -27,7 +27,7 @@
     name:"%config.id%-%config.version%",
     url: "https://github.com/trioderegion/steinhardts-support-desk",
     bugs: "%package.url%/issues",
-    changelog: "%package.url%/discussions/categories/updates",
+    changelog: "%package.url%/discussions/categories/heresy-of-steel-updates",
   },
   "dest":"../built-demo-module",
   "profile": {
