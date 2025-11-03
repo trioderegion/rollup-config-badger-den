@@ -31,7 +31,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "@foundryvtt/foundryvtt-cli": "^1.1.0",
+    "@foundryvtt/foundryvtt-cli": "^3.0.0",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",

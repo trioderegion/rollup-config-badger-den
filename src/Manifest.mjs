@@ -1,5 +1,5 @@
 import locale from "locale-codes";
-import { globSync as glob } from "glob";
+import {globSync as glob} from "glob";
 import path from "path";
 import fs from "fs";
 import deepmerge from "deepmerge";
@@ -26,13 +26,34 @@ import JSON5 from "json5";
  */
 
 /**
+ * Configuration options for the database extraction and compilation process. Is a combined subset of ExtractOptions
+ * and PackageOptions defined here: https://github.com/foundryvtt/foundryvtt-cli/blob/375bd7165d0556041ad02fb32276771bb303ed4e/lib/package.mjs#L28.
+ *
+ * Note: During compiling/packing, DatabaseOptions.folders will internally set CompileOptions.recursive (see source link, above). 
+ * @typedef {Object} DatabaseOptions
+ * @prop {Boolean} [yaml=true]                  Whether the source files are in YAML format, otherwise JSON is assumed.
+ * @prop {Boolean} [log=false]                  Whether to log operation progress to the console.
+ * @property {Boolean} [clean=false]            Delete the destination directory before unpacking.
+ * @property {Boolean} [folders=false]          Create a directory structure that matches the compendium folders.
+ * @property {Boolean} [expandAdventures=false] Write documents embedded in Adventures to their own files. If the
+ *                                              folders option is also supplied, the Adventure is treated like a
+ *                                              folder, and all its entries are grouped into sub-folders by
+ *                                              Document type.
+ * @property {Boolean} [omitVolatile=true]      Do not overwrite an existing entry if the new one has changes to
+ *                                              non-volatile fields. Currently, _stats.createdTime,
+ *                                              _stats.modifiedTime, _stats.lastModifiedBy, _stats.systemVersion,
+ *                                              and _stats.coreVersion are considered volatile.*
+ */
+
+/**
  * Definitions for module-included compendium databases. If `String` forms are used, values will apply to all discovered compendiums. If `Object` fields are used, values should be `String:String` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
  * @prop {globstring} path Defines root folders for general, or specific database discovery
+ * @prop {DatabaseOptions} [options] Database options passed to `@foundryvtt/foundryvtt-cli`
  * @prop {String|Object} type FoundryVTT Document type for discovered databases
  * @prop {String|Object} label Displayed name of compendium in FoundryVTT
- * @prop {Object} ownership User permissions for compendiums
+ * @prop {Object} [ownership] User permissions for compendiums
  * @prop {String|Object} [banner] Asset path for compendium banner
  * @prop {String|Object} [system] associated system (if any) for compendiums
  * @prop {{label:String, color:?String}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
@@ -126,7 +147,7 @@ const combineEntryPoints = (a = {}, b = {}) => {
  * Class which represents the data contained within a specific Badger Den config file. E.g. './rollup-config-badger-den.bd.json'.
  */
 class BDConfig {
-  #cache = { manifest: null, replacements: null };
+  #cache = {manifest: null, replacements: null};
 
   /**
    * Selected build profile within the config file
@@ -167,12 +188,12 @@ class BDConfig {
   makeSubstitutions(targetString, ref = this.config) {
     const exp = /%([\w\.]+)%/g;
 
-    while(targetString.search(exp) >= 0) {
+    while (targetString.search(exp) >= 0) {
       targetString = targetString.replaceAll(exp, (_, path) => {
         //console.log('Match', _, 'Path', path);
         const parts = path.split('.');
         if (parts.at(0) === this.namespace) parts.shift();
-        const replacement = parts.reduce( (curr, part) => curr[part], ref );
+        const replacement = parts.reduce((curr, part) => curr[part], ref);
         //console.log('Replacement', replacement);
         return replacement;
       });
@@ -203,12 +224,12 @@ class BDConfig {
     return staticFiles;
   }
 
-  makeEntryPointFields = (entryPoints, profile = this.profile) => {
+  makeEntryPointFields = (entryPoints, root = this.profile.src) => {
     /* ES Modules */
     let esmodules = entryPoints.main ?? [];
     if (typeof esmodules == "string") esmodules = [esmodules];
     esmodules = esmodules.flatMap((entry) =>
-      glob(entry, { cwd: profile.src })
+      glob(entry, {cwd: root})
         .filter((fp) => !!path.extname(fp))
         .map(posixPath)
     );
@@ -217,19 +238,19 @@ class BDConfig {
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, { cwd: profile.src, onlyFiles: true }).map(posixPath)
+      glob(entry, {cwd: root, onlyFiles: true}).map(posixPath)
     );
 
     /* Templates */
     let templates = entryPoints.templates ?? [];
     if (typeof templates == "string") templates = [templates];
     templates = templates.flatMap((entry) =>
-      glob(entry, { cwd: profile.src, onlyFiles: true }).map(posixPath)
+      glob(entry, {cwd: root, onlyFiles: true}).map(posixPath)
     );
 
     /* Compiled Styles */
     this.config.styleSources = glob("**/*.{scss,less,css}", {
-      cwd: profile.src,
+      cwd: root,
       onlyFiles: true,
       unique: true,
       gitignore: true,
@@ -241,7 +262,7 @@ class BDConfig {
     let languages = entryPoints.lang ?? [];
     if (typeof languages == "string") languages = [languages];
     languages = languages.flatMap((entry) => {
-      const files = glob(entry, { cwd: profile.src }).filter(
+      const files = glob(entry, {cwd: root}).filter(
         (fp) => !!path.extname(fp)
       );
       return files
@@ -253,7 +274,7 @@ class BDConfig {
               lang,
               name,
               path: posixPath(
-                path.relative(profile.src, path.join(profile.src, filename))
+                path.relative(root, path.join(root, filename))
               ),
             };
           }
@@ -263,12 +284,12 @@ class BDConfig {
     });
 
     /* Discovered document types */
-    const defFiles = glob("**/*.bdt.json", { cwd: profile.src });
+    const defFiles = glob("**/*.bdt.json", {cwd: root});
     const documentTypes = defFiles.reduce((acc, file) => {
-      const fullPath = path.join(profile.src, file);
-      const { type, ...def } = JSON.parse(fs.readFileSync(fullPath));
+      const fullPath = path.join(root, file);
+      const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
 
-      const { base } = path.parse(fullPath);
+      const {base} = path.parse(fullPath);
       const id = base.split(".").at(0);
       acc[type] ??= {};
       acc[type][id] = def;
@@ -276,17 +297,35 @@ class BDConfig {
       return acc;
     }, {});
 
-    /* Discovered compendium source folders */
-    /* 1) Enumerate folders of provided paths
+    /* Discover compendium source folders
+     * 0) Extract un/packing options (passed directly)
+     * 1) Enumerate folders of provided paths
      * 3) Construct object of 'name' to {entry data}
      * 4) Grab all other keys inside 'compendia' root to insert into each entry value
      * 5) return as array of values in 'packs' field
      */
-    const paths = entryPoints.compendia?.path ?? [];
-    const packFolders = paths.flatMap((p) => {
+    entryPoints.compendia ??= {};
+    const unpack = deepmerge(
+      {
+        yaml: true,
+        omitVolatile: true,
+      },
+      entryPoints.compendia.options ?? {}
+    );
+
+    const dbOptions = {
+      pack: {...unpack, recursive: !!unpack.folders},
+      unpack,
+    }
+
+    delete entryPoints.compendia.options;
+
+    const packFolders = (entryPoints.compendia.path ?? []).flatMap((p) => {
       if (p.at(-1) != "/") p += "/";
-      return glob(p, { cwd: profile.src });
+      return glob(p, {cwd: root});
     });
+
+    delete entryPoints.compendia.path;
 
     const getPackValue = (name, property) => {
       const val = entryPoints.compendia[property];
@@ -297,20 +336,20 @@ class BDConfig {
     };
 
     const compendiumFields = Reflect.ownKeys(
-      entryPoints.compendia ?? {}
+      entryPoints.compendia
     ).filter((key) => !key.includes("path"));
 
     const packs = packFolders.map((folder) => {
       const folderPath = posixPath(folder);
       const parsed = path.parse(folderPath);
-      const { name } = parsed;
+      const {name} = parsed;
 
       parsed.base = parsed.name = name;
       const packPath = posixPath(path.format(parsed));
 
       //console.log(folderPath, parsed, packPath, type, name);
 
-      const entry = { name, path: packPath };
+      const entry = {name, path: packPath};
       compendiumFields.forEach((opt) => {
         const val = getPackValue(name, opt);
         if (!!val) entry[opt] = val;
@@ -324,7 +363,7 @@ class BDConfig {
       return entry;
     });
 
-    const folder = entryPoints.compendia?.folder ?? {};
+    const folder = entryPoints.compendia.folder ?? {};
     const packFolderEntries = [];
     if ("label" in folder) {
       packFolderEntries.push({
@@ -371,6 +410,7 @@ class BDConfig {
       templates,
       packs,
       packFolders: packFolderEntries,
+      dbOptions,
       documentTypes,
       externals,
       statics,
@@ -411,6 +451,7 @@ class BDConfig {
         statics: null,
         templates: null,
         externals: null,
+        dbOptions: null,
       };
     else {
       this.#cache ??= {};
@@ -418,15 +459,17 @@ class BDConfig {
       this.#cache.statics ??= null;
       this.#cache.templates ??= null;
       this.#cache.externals ??= null;
+      this.#cache.dbOptions ??= null;
     }
 
     if (Object.values(this.#cache).some((v) => !v)) {
-      const { templates, externals, statics, ...entryPoints } =
+      const {templates, externals, statics, dbOptions, ...entryPoints} =
         this.makeEntryPointFields(this.config.entryPoints);
 
       this.#cache.statics ??= statics;
       this.#cache.templates ??= templates;
       this.#cache.externals ??= externals;
+      this.#cache.dbOptions ??= dbOptions;
 
       /** 
        * @type PackageManifestData
@@ -502,8 +545,8 @@ class BDConfig {
       delete this.config.projectUrl;
     }
 
-    this.config.package.media = ensureArray(this.config.package.media); 
-    this.profile.package.media = ensureArray(this.profile.package.media); 
+    this.config.package.media = ensureArray(this.config.package.media);
+    this.profile.package.media = ensureArray(this.profile.package.media);
 
     /* Prepare final packaging data */
     this.config.package = deepmerge.all([
@@ -565,8 +608,7 @@ class BDConfig {
 
     if (!configPath) {
       throw new Error(
-        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${json5Path}" or "${jsonPath}" from "${
-          import.meta.url
+        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${json5Path}" or "${jsonPath}" from "${import.meta.url
         }".`
       );
     }
@@ -610,13 +652,13 @@ class BDConfig {
     /* Sanity check to make sure parent directory of the 
      * module (i.e. profile.dest) exists. */
     if (!fs.existsSync(profile.dest)) {
-      fs.mkdirSync(profile.dest, { recursive: true });
+      fs.mkdirSync(profile.dest, {recursive: true});
     }
 
     /* Final resting place is defined 'destination' + packageID */
     profile.dest = path.join(profile.dest, config.id);
 
-   config.authors ??= [];
+    config.authors ??= [];
 
     /* merge profile-based overrides into config */
     config.entryPoints = combineEntryPoints(
@@ -630,10 +672,10 @@ class BDConfig {
     config.dependencies.modules ??= {};
     config.dependencies.optional ??= {};
     config.dependencies = deepmerge(config.dependencies, profile.dependencies ?? {});
- 
+
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
-    
+
     this.config = deepmerge(config, this.overrides);
     this.profile = profile;
 
@@ -642,7 +684,7 @@ class BDConfig {
     this.profile = JSON5.parse(this.makeSubstitutions(JSON5.stringify(this.profile)));
     //console.log('config', this.config, 'profile', this.profile);
 
-    return { profile, config };
+    return {profile, config};
   }
 
   get styleSources() {

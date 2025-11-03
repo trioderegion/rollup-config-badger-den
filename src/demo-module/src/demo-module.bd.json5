@@ -8,7 +8,13 @@
     "templates": "templates/*",
     "external": "lib/tiny.mjs",
     "compendia": {
-      "path": "packs/*/",
+      path: "packs/*/",
+      options: {
+        omitVolatile: true,
+        clean: true,
+        folders: true,
+        expandAdventures: true,
+      },
       "type": {
         "demo-actors": "Actor"
       },
@@ -20,7 +26,7 @@
         "label": "Demo Module Content",
         "color": "#FF0000"
       },
-      "system": "nova"
+      "system": "dnd5e"
     }
   },
   "package": {

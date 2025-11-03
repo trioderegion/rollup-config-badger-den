@@ -115,7 +115,6 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
       const subplugs = [];
 
       /* Can we safely clean the output directory if requested? */
-      //const dbOp = opts.plugins.find(p => p.name === 'rollup-plugin-badger-foundry');
       if (api.shouldClean) {
         subplugs.push(
           del({

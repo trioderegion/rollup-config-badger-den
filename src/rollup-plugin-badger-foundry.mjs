@@ -59,7 +59,7 @@ function getPlugin(config, pack, unpack) {
           const source = path.join(config.profile.src, packInfo.path);
           const dest = path.join(config.profile.dest, packInfo.path);
           console.log(`Packing: ${packInfo.label} (${packInfo.path})`);
-          await ldb.pack(source, dest);
+          await ldb.pack(source, dest, config.cache.dbOptions.pack);
         }
         api.ranOnce.pack = true;
       }
@@ -70,7 +70,7 @@ function getPlugin(config, pack, unpack) {
           const source = path.join(config.profile.src, packInfo.path);
           const dest = path.join(config.profile.dest, packInfo.path);
           console.log(`Unpacking: ${packInfo.label} (${packInfo.path})`);
-          await ldb.unpack(dest, source);
+          await ldb.unpack(dest, source, config.cache.dbOptions.unpack);
         }
 
         api.ranOnce.unpack = true;
