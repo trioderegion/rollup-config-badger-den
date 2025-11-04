@@ -4,7 +4,7 @@
   "title": "Badger Den Demo Module",
   "description": "Demonstration module built from the Badger Den",
   "entryPoints": {
-    "lang": "static/lang/**",
+    "lang": "lang/**",
     "templates": "templates/*",
     "external": "lib/tiny.mjs",
     "compendia": {

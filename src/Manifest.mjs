@@ -190,11 +190,9 @@ class BDConfig {
 
     while (targetString.search(exp) >= 0) {
       targetString = targetString.replaceAll(exp, (_, path) => {
-        //console.log('Match', _, 'Path', path);
         const parts = path.split('.');
         if (parts.at(0) === this.namespace) parts.shift();
         const replacement = parts.reduce((curr, part) => curr[part], ref);
-        //console.log('Replacement', replacement);
         return replacement;
       });
     }

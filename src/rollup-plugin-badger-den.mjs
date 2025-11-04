@@ -95,13 +95,20 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
             src: api.makeInclude(entry),
             dest: path.join(api.meta.profile.dest, path.dirname(entry)),
           };
+          
           return mapping;
         };
 
-      const staticLangs = api.cache.manifest.languages
-        .map(lang => makeStaticEntry(lang.path));
+      const makeTransformedEntry = (entry) => {
+        const mapping = makeStaticEntry(entry);
+        mapping.transform = (contents) => api.meta.makeSubstitutions(contents.toString());
+        return mapping;
+      }
 
-      const staticTemplates = api.cache.templates.map(makeStaticEntry);
+      const staticLangs = api.cache.manifest.languages
+        .map(lang => makeTransformedEntry(lang.path));
+
+      const staticTemplates = api.cache.templates.map(makeTransformedEntry);
       const staticInputs = api.cache.statics.map(makeStaticEntry);
 
       const copyOpts = {
