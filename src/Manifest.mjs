@@ -164,6 +164,12 @@ class BDConfig {
   /* Replacement namespace */
   namespace = null;
 
+  /** 
+   * Substitution pattern
+   * @type RegExp
+   */
+  subExp = "%\\s?([^\\s]+?)\\s?%";
+
   /**
    * Generate manifest data
    *
@@ -186,7 +192,7 @@ class BDConfig {
   }
 
   makeSubstitutions(targetString, ref = this.config) {
-    const exp = /%([\w\.]+)%/g;
+    const exp = new RegExp(this.subExp, 'g');
 
     while (targetString.search(exp) >= 0) {
       targetString = targetString.replaceAll(exp, (_, path) => {

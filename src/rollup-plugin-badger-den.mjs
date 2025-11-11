@@ -137,7 +137,13 @@ function getPlugin({ config, scssPlug, compressPlug, options } = {}) {
         subplugs.push(
           scssPlug({
             extract: api.meta.config.id + ".css",
-            to: api.meta.profile.src
+            to: api.meta.profile.src,
+          },{
+            replace: {
+              //pattern: '%\\s?([^\\s]+?)\\s?%',
+              pattern: api.meta.subExp,
+              data: api.meta.config,
+            },
           }))
       }
 

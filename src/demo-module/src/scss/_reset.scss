@@ -1,9 +1,12 @@
-@use 'variables';
+@use 'variables' as vars;
 
 @mixin list() {
   ul {
-    margin: variables.$test;
+    margin: vars.$test;
     padding: 0;
     list-style: none;
+    --var-version: #{vars.$version};
+    --raw-id: "%id%";
+    --raw-version: "%version%";
   }
 }

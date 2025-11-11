@@ -1,4 +1,4 @@
-@use 'variables';
+@use 'variables' as vars;
 @use 'reset';
 
 :root {
@@ -7,7 +7,13 @@
 div, h1 {
   border:1px;
 }
+
 p {
   @include reset.list();
-  margin: variables.$test;
+  font-variant: "%id%";
+  font-family: vars.$id;
+}
+
+.%id% {
+  --version: #{vars.$version};
 }
