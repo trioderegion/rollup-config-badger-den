@@ -219,7 +219,6 @@ class BDConfig {
 
     const staticFiles = glob(globs, {
       cwd: profile.src,
-      onlyFiles: true,
       unique: true,
       matchBase: true,
       posix: true,
@@ -242,20 +241,20 @@ class BDConfig {
     let externals = entryPoints.external ?? [];
     if (typeof externals == "string") externals = [externals];
     externals = externals.flatMap((entry) =>
-      glob(entry, {cwd: root, onlyFiles: true}).map(posixPath)
+      glob(entry, {cwd: root, nodir: true}).map(posixPath)
     );
 
     /* Templates */
     let templates = entryPoints.templates ?? [];
     if (typeof templates == "string") templates = [templates];
     templates = templates.flatMap((entry) =>
-      glob(entry, {cwd: root, onlyFiles: true}).map(posixPath)
+      glob(entry, {cwd: root, nodir: true}).map(posixPath)
     );
 
     /* Compiled Styles */
     this.config.styleSources = glob("**/*.{scss,less,css}", {
       cwd: root,
-      onlyFiles: true,
+      nodir: true,
       unique: true,
       gitignore: true,
     }).map(posixPath);

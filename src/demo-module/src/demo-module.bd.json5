@@ -5,7 +5,7 @@
   "description": "Demonstration module built from the Badger Den",
   "entryPoints": {
     "lang": "lang/**",
-    "templates": "templates/*",
+    "templates": ["templates/*", "templates"],
     "external": "lib/tiny.mjs",
     "compendia": {
       path: "packs/*/",
