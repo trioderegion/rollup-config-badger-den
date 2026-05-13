@@ -638,7 +638,13 @@ class BDConfig {
     profile.flags ??= {};
 
     /* allow profiles to override module ID */
-    config.id = profile.id ?? config.id ?? configName;
+    {
+      const primaryId = config.id ?? configName;
+      config.id = profile.id ?? primaryId;
+
+      /* if we are creating a variant, store the 'primary' module ID */
+      if (primaryId !== config.id) config.pid = profile.pid ?? primaryId;
+    }
 
     /* allow main config to define default output destination */
     profile.dest ??= config.dest;
@@ -663,6 +669,22 @@ class BDConfig {
 
     config.authors ??= [];
 
+    /* If this is a variant build, replace certain config
+     * values, rather than merging as a list */
+    if (config.pid?.length && ('entryPoints' in profile)) {
+      config.entryPoints ??= {};
+      if ('main' in profile.entryPoints) {
+        config.entryPoints.main = profile.entryPoints.main;
+        delete profile.entryPoints.main;
+      }
+
+      if ('compendia' in profile.entryPoints && 'path' in profile.entryPoints.compendia) {
+        config.entryPoints.compendia ??= {};
+        config.entryPoints.compendia.path = profile.entryPoints.compendia.path;
+        delete profile.entryPoints.compendia.path;
+      }
+    }
+
     /* merge profile-based overrides into config */
     config.entryPoints = combineEntryPoints(
       config.entryPoints,
@@ -678,6 +700,8 @@ class BDConfig {
 
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
+    config.title = profile.title ?? config.title;
+    config.description = profile.description ?? config.description;
 
     this.config = deepmerge(config, this.overrides);
     this.profile = profile;
