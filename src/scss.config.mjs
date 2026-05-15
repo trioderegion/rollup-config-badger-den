@@ -22,8 +22,6 @@ export default ( config = {}, pluginConfig = {}, plugin = cssPlugin) => {
       }),
     ],
     use: ["sass", "less"], // Use sass / dart-sass and less
-    sourceMap: true,
-    minimize: true,
   }
 
   const finalConfig = merge(defaultConfig, config);

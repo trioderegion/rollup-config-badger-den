@@ -130,6 +130,8 @@ import JSON5 from "json5";
  *                                 detected by presense of 'uploadPersistent' in bundled code.
  */
 
+const overwriteMerge = (dest, source, options) => source;
+
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 const ensureArray = (val) => (val instanceof Array ? val : !!val ? [val] : []);
 
@@ -340,7 +342,7 @@ class BDConfig {
 
     const compendiumFields = Reflect.ownKeys(
       entryPoints.compendia
-    ).filter((key) => !key.includes("path"));
+    ).filter((key) => !['path', 'manifest'].includes(key));
 
     const packs = packFolders.map((folder) => {
       const folderPath = posixPath(folder);
@@ -517,16 +519,13 @@ class BDConfig {
     let local = profile.flags ?? {};
 
     /* grab predefined profile switches */
-    if (!!profile.hmr) {
-      const predef = {
-        hotReload: {
-          extensions: ["css", "html", "hbs", "json"],
-        },
+    if (profile.hmr === true) {
+      local.hotReload = {
+        extensions: ["css", "html", "hbs", "json"],
       };
-      local = deepmerge(local, predef);
     }
 
-    return deepmerge(global, local);
+    return deepmerge(global, local, {arrayMerge: overwriteMerge});
   }
 
   processPackage() {
