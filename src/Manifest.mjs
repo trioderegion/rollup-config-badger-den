@@ -670,17 +670,30 @@ class BDConfig {
 
     /* If this is a variant build, replace certain config
      * values, rather than merging as a list */
-    if (config.pid?.length && ('entryPoints' in profile)) {
-      config.entryPoints ??= {};
-      if ('main' in profile.entryPoints) {
-        config.entryPoints.main = profile.entryPoints.main;
-        delete profile.entryPoints.main;
+    if (config.pid?.length) {
+
+      if ('entryPoints' in profile) {
+        config.entryPoints ??= {};
+        if ('main' in profile.entryPoints) {
+          config.entryPoints.main = profile.entryPoints.main;
+          delete profile.entryPoints.main;
+        }
+
+        if ('compendia' in profile.entryPoints && 'path' in profile.entryPoints.compendia) {
+          config.entryPoints.compendia ??= {};
+          config.entryPoints.compendia.path = profile.entryPoints.compendia.path;
+          delete profile.entryPoints.compendia.path;
+        }
+
+        if ('templates' in profile.entryPoints) {
+          config.entryPoints.templates = profile.entryPoints.templates;
+          delete profile.entryPoints.templates;
+        }
       }
 
-      if ('compendia' in profile.entryPoints && 'path' in profile.entryPoints.compendia) {
-        config.entryPoints.compendia ??= {};
-        config.entryPoints.compendia.path = profile.entryPoints.compendia.path;
-        delete profile.entryPoints.compendia.path;
+      if ('static' in profile) {
+        config.static = profile.static;
+        delete profile.static;
       }
     }
 
