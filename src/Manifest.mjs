@@ -27,7 +27,7 @@ import JSON5 from "json5";
 
 /**
  * Configuration options for the database extraction and compilation process. Is a combined subset of ExtractOptions
- * and PackageOptions defined here: https://github.com/foundryvtt/foundryvtt-cli/blob/375bd7165d0556041ad02fb32276771bb303ed4e/lib/package.mjs#L28.
+ * and PackageOptions defined here: [package.mjs]{@link https://github.com/foundryvtt/foundryvtt-cli/blob/375bd7165d0556041ad02fb32276771bb303ed4e/lib/package.mjs#L28}
  *
  * Note: During compiling/packing, DatabaseOptions.folders will internally set CompileOptions.recursive (see source link, above). 
  * @typedef {Object} DatabaseOptions
@@ -46,6 +46,15 @@ import JSON5 from "json5";
  */
 
 /**
+ * @typedef {Record<string, string[] | {change: Object}>} EmbeddedManifest 
+ */
+
+/**
+ * @typedef {Record<string, Record<string, EmbeddedManifest>>} ManifestJSON
+ *
+ */
+
+/**
  * Definitions for module-included compendium databases. If `String` forms are used, values will apply to all discovered compendiums. If `Object` fields are used, values should be `String:String` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
@@ -54,9 +63,22 @@ import JSON5 from "json5";
  * @prop {String|Object} type FoundryVTT Document type for discovered databases
  * @prop {String|Object} label Displayed name of compendium in FoundryVTT
  * @prop {Object} [ownership] User permissions for compendiums
+ * @prop {Object} [flags] Flags to set on compendiums
  * @prop {String|Object} [banner] Asset path for compendium banner
  * @prop {String|Object} [system] associated system (if any) for compendiums
  * @prop {{label:String, color:?String}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
+ * @prop {ManifestJSON} [manifest] Defines the subset of compendium content to include.
+ */
+
+/**
+ * Defines subtypes to be used with this config (or profile). See example {@link https://foundryvtt.com/article/module-sub-types/}.
+ *
+ * @typedef {Object} SubTypesJSON
+ * @prop {string} type Primary (or parent) document class of this particular subtype.
+ * @prop {string} name Document subtype name (e.g. 'quest')
+ * @prop {string[]} [htmlFields]
+ * @prop {Record<string, string[]>} [filePathFields] 
+ * @prop {string[]} [gmOnlyFields]
  */
 
 /**
@@ -68,6 +90,8 @@ import JSON5 from "json5";
  * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`)
  * @prop {globstring} [templates] paths for handlebars template files (.hbs or .html)
  * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
+ * @prop {SubTypesJSON[]} [subtypes] module-provided document subtype definitions
+ * @prop {globstring} [external] paths to isolate from primary bundle; useful for isolating third-party library code from primary code.
  */
 
 /**
@@ -107,10 +131,9 @@ import JSON5 from "json5";
 /**
  * @typedef {Object} DenConfigJSON
  * @prop {String} [id] Top level identifier for module (default is BD file name, as `[id].bd.json`)
- * @prop {String} version Directly added to resulting manifest
- * @prop {String} title Directly added to resulting manifeste
+ * @prop {String} version Directly added to resulting manifest (Overridden by --config-version switch)
+ * @prop {String} title Directly added to resulting manifest
  * @prop {String} description Directly added to resulting manifest
- * @prop {String} [projectUrl]
  * @prop {PackageJSON} [package] Global packaging instructions for all profiles. Overridden by profile entries.
  * @prop {EntryPointJSON} entryPoints
  * @prop {String} dest Output directory for resulting build, relative to this bd config file
@@ -129,6 +152,8 @@ import JSON5 from "json5";
  * @prop {Boolean} [storage=false] Directly added to resulting manifest as "persistentStorage" -- automatically
  *                                 detected by presense of 'uploadPersistent' in bundled code.
  */
+
+const overwriteMerge = (dest, source, options) => source;
 
 const posixPath = (winPath) => winPath.split(path.sep).join(path.posix.sep);
 const ensureArray = (val) => (val instanceof Array ? val : !!val ? [val] : []);
@@ -286,19 +311,35 @@ class BDConfig {
         .filter((lang) => !!lang);
     });
 
-    /* Discovered document types */
-    const defFiles = glob("**/*.bdt.json", {cwd: root});
-    const documentTypes = defFiles.reduce((acc, file) => {
-      const fullPath = path.join(root, file);
-      const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
+    const {subtypes = []} = entryPoints;
+    const documentTypes = subtypes.reduce( (acc, curr) => {
+      const entry = {
+        [curr.type]: {
+          [curr.name]: {
+            htmlFields: curr.htmlFields,
+            filePathFields: curr.filePathFields,
+            gmOnlyFields: curr.gmOnlyFields,
+          }
+        }
+      };
 
-      const {base} = path.parse(fullPath);
-      const id = base.split(".").at(0);
-      acc[type] ??= {};
-      acc[type][id] = def;
+      return deepmerge(acc, entry);
 
-      return acc;
     }, {});
+
+    /* Discovered document types */
+    //const defFiles = glob("**/*.bdt.json", {cwd: root});
+    //const documentTypes = defFiles.reduce((acc, file) => {
+    //  const fullPath = path.join(root, file);
+    //  const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
+
+    //  const {base} = path.parse(fullPath);
+    //  const id = base.split(".").at(0);
+    //  acc[type] ??= {};
+    //  acc[type][id] = def;
+
+    //  return acc;
+    //}, {});
 
     /* Discover compendium source folders
      * 0) Extract un/packing options (passed directly)
@@ -340,7 +381,7 @@ class BDConfig {
 
     const compendiumFields = Reflect.ownKeys(
       entryPoints.compendia
-    ).filter((key) => !key.includes("path"));
+    ).filter((key) => !['path', 'manifest'].includes(key));
 
     const packs = packFolders.map((folder) => {
       const folderPath = posixPath(folder);
@@ -387,9 +428,9 @@ class BDConfig {
         languages.map((lang) => `${lang.name} (${lang.path})`)
       );
     if (templates.length > 0) console.log("Discovered Templates:", templates);
-    if (defFiles.length > 0)
+    if (subtypes.length > 0)
       console.log(
-        "Discovered Sub-Types:",
+        "Document Sub-Types:",
         Reflect.ownKeys(documentTypes).map(
           (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
         )
@@ -517,36 +558,19 @@ class BDConfig {
     let local = profile.flags ?? {};
 
     /* grab predefined profile switches */
-    if (!!profile.hmr) {
-      const predef = {
-        hotReload: {
-          extensions: ["css", "html", "hbs", "json"],
-        },
+    if (profile.hmr === true) {
+      local.hotReload = {
+        extensions: ["css", "html", "hbs", "json"],
       };
-      local = deepmerge(local, predef);
     }
 
-    return deepmerge(global, local);
+    return deepmerge(global, local, {arrayMerge: overwriteMerge});
   }
 
   processPackage() {
 
     this.config.package ??= {};
     this.profile.package ??= {};
-
-    if (this.profile.premium) {
-      console.warn('[Deprecation: DenProfileJSON.premium] Use [DenConfigJSON|DenProfileJSON].package.protected instead. See PackageJSON.protected. Will be removed in version 2.0.');
-      delete this.profile.premium;
-      this.profile.package ??= {};
-      this.profile.package.protected = true;
-    }
-
-    if (this.config.projectUrl) {
-      console.warn('[Deprecation: DenConfigJSON.projectUrl] Use [DenConfigJSON|DenProfileJSON].package.url instead. See PackageJSON.url. Will be removed in version 2.0.');
-      this.config.package ??= {};
-      this.config.package.url = this.config.projectUrl;
-      delete this.config.projectUrl;
-    }
 
     this.config.package.media = ensureArray(this.config.package.media);
     this.profile.package.media = ensureArray(this.profile.package.media);
@@ -611,8 +635,8 @@ class BDConfig {
 
     if (!configPath) {
       throw new Error(
-        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${json5Path}" or "${jsonPath}" from "${import.meta.url
-        }".`
+        `Could not locate den config file. Provided URI = "${profileURI}".
+         Localized to "${json5Path}" or "${jsonPath}" from "${import.meta.url}".`
       );
     }
 
@@ -638,7 +662,13 @@ class BDConfig {
     profile.flags ??= {};
 
     /* allow profiles to override module ID */
-    config.id = profile.id ?? config.id ?? configName;
+    {
+      const primaryId = config.id ?? configName;
+      config.id = profile.id ?? primaryId;
+
+      /* if we are creating a variant, store the 'primary' module ID */
+      if (primaryId !== config.id) config.pid = profile.pid ?? primaryId;
+    }
 
     /* allow main config to define default output destination */
     profile.dest ??= config.dest;
@@ -663,6 +693,41 @@ class BDConfig {
 
     config.authors ??= [];
 
+    /* If this is a variant build, replace certain config
+     * values, rather than merging as a list */
+    if (config.pid?.length) {
+
+      if ('entryPoints' in profile) {
+        config.entryPoints ??= {};
+        if ('main' in profile.entryPoints) {
+          config.entryPoints.main = profile.entryPoints.main;
+          delete profile.entryPoints.main;
+        }
+
+        if ('compendia' in profile.entryPoints && 'path' in profile.entryPoints.compendia) {
+          config.entryPoints.compendia ??= {};
+          config.entryPoints.compendia.path = profile.entryPoints.compendia.path;
+          delete profile.entryPoints.compendia.path;
+        }
+
+        if ('templates' in profile.entryPoints) {
+          config.entryPoints.templates = profile.entryPoints.templates;
+          delete profile.entryPoints.templates;
+        }
+
+        if ('subtypes' in profile.entryPoints) {
+          config.entryPoints.subtypes = profile.entryPoints.subtypes;
+          delete profile.entryPoints.subtypes;
+        }
+      }
+
+      if ('static' in profile) {
+        config.static = profile.static;
+        delete profile.static;
+      }
+
+    }
+
     /* merge profile-based overrides into config */
     config.entryPoints = combineEntryPoints(
       config.entryPoints,
@@ -678,6 +743,8 @@ class BDConfig {
 
     config.flags = this.makeFlags(config, profile);
     config.version = profile.version ?? config.version;
+    config.title = profile.title ?? config.title;
+    config.description = profile.description ?? config.description;
 
     this.config = deepmerge(config, this.overrides);
     this.profile = profile;
