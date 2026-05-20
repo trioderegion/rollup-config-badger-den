@@ -313,7 +313,7 @@ class BDConfig {
     const {subtypes = []} = entryPoints;
     const documentTypes = subtypes.reduce( (acc, curr) => {
       const entry = {
-        [curr.parent]: {
+        [curr.type]: {
           [curr.name]: {
             htmlFields: curr.htmlFields,
             filePathFields: curr.filePathFields,
@@ -713,12 +713,18 @@ class BDConfig {
           config.entryPoints.templates = profile.entryPoints.templates;
           delete profile.entryPoints.templates;
         }
+
+        if ('subtypes' in profile.entryPoints) {
+          config.entryPoints.subtypes = profile.entryPoints.subtypes;
+          delete profile.entryPoints.subtypes;
+        }
       }
 
       if ('static' in profile) {
         config.static = profile.static;
         delete profile.static;
       }
+
     }
 
     /* merge profile-based overrides into config */
