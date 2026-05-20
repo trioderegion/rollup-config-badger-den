@@ -71,14 +71,14 @@ import JSON5 from "json5";
  */
 
 /**
- * Defines subtypes to be used with this config (or profile). See example @link{https://foundryvtt.com/article/module-sub-types/}.
+ * Defines subtypes to be used with this config (or profile). See example {@link https://foundryvtt.com/article/module-sub-types/}.
  *
  * @typedef {Object} SubTypesJSON
- * @param {string} type Primary (or parent) document class of this particular subtype.
- * @param {string} name Document subtype name (e.g. 'quest')
- * @param {string[]} [htmlFields]
- * @param {Record<string, string[]} [filePathFields] Data model path to allowed list of file types (see: @link{https://foundryvtt.com/api/variables/CONST.FILE_CATEGORIES.html})
- * @param {string[]} [gmOnlyFields]
+ * @prop {string} type Primary (or parent) document class of this particular subtype.
+ * @prop {string} name Document subtype name (e.g. 'quest')
+ * @prop {string[]} [htmlFields]
+ * @prop {Record<string, string[]>} [filePathFields] 
+ * @prop {string[]} [gmOnlyFields]
  */
 
 /**
@@ -91,6 +91,7 @@ import JSON5 from "json5";
  * @prop {globstring} [templates] paths for handlebars template files (.hbs or .html)
  * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
  * @prop {SubTypesJSON[]} [subtypes] module-provided document subtype definitions
+ * @prop {globstring} [external] paths to isolate from primary bundle; useful for isolating third-party library code from primary code.
  */
 
 /**
