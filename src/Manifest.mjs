@@ -46,6 +46,15 @@ import JSON5 from "json5";
  */
 
 /**
+ * @typedef {Record<string, string[] | {change: Object}>} EmbeddedManifest 
+ */
+
+/**
+ * @typedef {Record<string, Record<string, EmbeddedManifest>>} ManifestJSON
+ *
+ */
+
+/**
  * Definitions for module-included compendium databases. If `String` forms are used, values will apply to all discovered compendiums. If `Object` fields are used, values should be `String:String` pairs keyed by the compendium's containing folder, which is used as its ID.
  *
  * @typedef {Object} CompendiaJSON
@@ -54,9 +63,22 @@ import JSON5 from "json5";
  * @prop {String|Object} type FoundryVTT Document type for discovered databases
  * @prop {String|Object} label Displayed name of compendium in FoundryVTT
  * @prop {Object} [ownership] User permissions for compendiums
+ * @prop {Object} [flags] Flags to set on compendiums
  * @prop {String|Object} [banner] Asset path for compendium banner
  * @prop {String|Object} [system] associated system (if any) for compendiums
  * @prop {{label:String, color:?String}} [folder] Top level folder definition, color fields use hex-strings of the form `"#RRGGBB"`.
+ * @prop {ManifestJSON} [manifest] Defines the subset of compendium content to include.
+ */
+
+/**
+ * Defines subtypes to be used with this config (or profile). See example @link{https://foundryvtt.com/article/module-sub-types/}.
+ *
+ * @typedef {Object} SubTypesJSON
+ * @param {string} type Primary (or parent) document class of this particular subtype.
+ * @param {string} name Document subtype name (e.g. 'quest')
+ * @param {string[]} [htmlFields]
+ * @param {Record<string, string[]} [filePathFields] Data model path to allowed list of file types (see: @link{https://foundryvtt.com/api/variables/CONST.FILE_CATEGORIES.html})
+ * @param {string[]} [gmOnlyFields]
  */
 
 /**
@@ -68,6 +90,7 @@ import JSON5 from "json5";
  * @prop {globstring} [lang] paths for language files with `[country code].json` format (e.g. `en.json`)
  * @prop {globstring} [templates] paths for handlebars template files (.hbs or .html)
  * @prop {CompendiaJSON} [compendia] folder paths containing leveldb source files, with equivalent relative paths used as location for profile's built package databases
+ * @prop {SubTypesJSON[]} [subtypes] module-provided document subtype definitions
  */
 
 /**
@@ -107,10 +130,9 @@ import JSON5 from "json5";
 /**
  * @typedef {Object} DenConfigJSON
  * @prop {String} [id] Top level identifier for module (default is BD file name, as `[id].bd.json`)
- * @prop {String} version Directly added to resulting manifest
- * @prop {String} title Directly added to resulting manifeste
+ * @prop {String} version Directly added to resulting manifest (Overridden by --config-version switch)
+ * @prop {String} title Directly added to resulting manifest
  * @prop {String} description Directly added to resulting manifest
- * @prop {String} [projectUrl]
  * @prop {PackageJSON} [package] Global packaging instructions for all profiles. Overridden by profile entries.
  * @prop {EntryPointJSON} entryPoints
  * @prop {String} dest Output directory for resulting build, relative to this bd config file
@@ -288,19 +310,35 @@ class BDConfig {
         .filter((lang) => !!lang);
     });
 
-    /* Discovered document types */
-    const defFiles = glob("**/*.bdt.json", {cwd: root});
-    const documentTypes = defFiles.reduce((acc, file) => {
-      const fullPath = path.join(root, file);
-      const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
+    const {subtypes = []} = entryPoints;
+    const documentTypes = subtypes.reduce( (acc, curr) => {
+      const entry = {
+        [curr.parent]: {
+          [curr.name]: {
+            htmlFields: curr.htmlFields,
+            filePathFields: curr.filePathFields,
+            gmOnlyFields: curr.gmOnlyFields,
+          }
+        }
+      };
 
-      const {base} = path.parse(fullPath);
-      const id = base.split(".").at(0);
-      acc[type] ??= {};
-      acc[type][id] = def;
+      return deepmerge(acc, entry);
 
-      return acc;
     }, {});
+
+    /* Discovered document types */
+    //const defFiles = glob("**/*.bdt.json", {cwd: root});
+    //const documentTypes = defFiles.reduce((acc, file) => {
+    //  const fullPath = path.join(root, file);
+    //  const {type, ...def} = JSON.parse(fs.readFileSync(fullPath));
+
+    //  const {base} = path.parse(fullPath);
+    //  const id = base.split(".").at(0);
+    //  acc[type] ??= {};
+    //  acc[type][id] = def;
+
+    //  return acc;
+    //}, {});
 
     /* Discover compendium source folders
      * 0) Extract un/packing options (passed directly)
@@ -389,9 +427,9 @@ class BDConfig {
         languages.map((lang) => `${lang.name} (${lang.path})`)
       );
     if (templates.length > 0) console.log("Discovered Templates:", templates);
-    if (defFiles.length > 0)
+    if (subtypes.length > 0)
       console.log(
-        "Discovered Sub-Types:",
+        "Document Sub-Types:",
         Reflect.ownKeys(documentTypes).map(
           (type) => `${type}[${Reflect.ownKeys(documentTypes[type]).join(".")}]`
         )
@@ -533,20 +571,6 @@ class BDConfig {
     this.config.package ??= {};
     this.profile.package ??= {};
 
-    if (this.profile.premium) {
-      console.warn('[Deprecation: DenProfileJSON.premium] Use [DenConfigJSON|DenProfileJSON].package.protected instead. See PackageJSON.protected. Will be removed in version 2.0.');
-      delete this.profile.premium;
-      this.profile.package ??= {};
-      this.profile.package.protected = true;
-    }
-
-    if (this.config.projectUrl) {
-      console.warn('[Deprecation: DenConfigJSON.projectUrl] Use [DenConfigJSON|DenProfileJSON].package.url instead. See PackageJSON.url. Will be removed in version 2.0.');
-      this.config.package ??= {};
-      this.config.package.url = this.config.projectUrl;
-      delete this.config.projectUrl;
-    }
-
     this.config.package.media = ensureArray(this.config.package.media);
     this.profile.package.media = ensureArray(this.profile.package.media);
 
@@ -610,8 +634,8 @@ class BDConfig {
 
     if (!configPath) {
       throw new Error(
-        `Could not locate den config file. Provided URI = "${profileURI}". Localized to "${json5Path}" or "${jsonPath}" from "${import.meta.url
-        }".`
+        `Could not locate den config file. Provided URI = "${profileURI}".
+         Localized to "${json5Path}" or "${jsonPath}" from "${import.meta.url}".`
       );
     }
 
